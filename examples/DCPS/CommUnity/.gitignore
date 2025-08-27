@@ -1,0 +1,38 @@
+# IDL-generated files - should not be committed as they are generated during build
+
+# TAO IDL compiler output
+*C.h
+*C.cpp
+*S.h
+*S.cpp
+
+# OpenDDS IDL compiler output
+*TypeSupportImpl.h
+*TypeSupportImpl.cpp
+*TypeSupport.idl
+
+# Compiled binaries
+demo_test
+community_publisher
+
+# Build artifacts
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# Generated makefiles
+GNUmakefile*
+Makefile*
+*.vcproj
+*.vcxproj
+*.sln
+
+# Backup and temporary files
+*~
+*.bak
+*.tmp
+.#*

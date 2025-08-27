@@ -1,0 +1,57 @@
+# CommUnity Publisher Configuration
+# Based on the CommUnity Application Design Document
+
+writer:
+  # Unique identifier for this Data Management Provider (DMP)
+  dmp_id: "org-123-publisher"
+  
+  api:
+    # HTTP API server configuration
+    host: "0.0.0.0"
+    port: 8080
+    # Authentication token for API access
+    auth_token: "secure_token_change_me_in_production"
+    
+  dds:
+    # OpenDDS domain configuration
+    domain_id: 0
+    
+    rtps_relay:
+      # RTPS relay for federated communication
+      host: "relay.community.org"
+      port: 4444
+    
+  security:
+    # Enable/disable DDS Security
+    enabled: false
+    
+    # Identity certificates (for authentication)
+    identity_ca: "/etc/community/certs/identity_ca.pem"
+    identity_cert: "/etc/community/certs/identity_cert.pem"
+    identity_key: "/etc/community/certs/identity_key.pem"
+    
+    # Access control certificates (for authorization)
+    permissions_ca: "/etc/community/certs/permissions_ca.pem"
+    permissions_file: "/etc/community/certs/permissions.xml"
+    governance_file: "/etc/community/certs/governance.xml"
+    
+  data:
+    # Data management settings
+    purge_timeout_seconds: 3600      # How long to keep published data
+    heartbeat_interval_seconds: 30   # How often to send heartbeat messages
+
+# Logging configuration
+logging:
+  level: INFO  # DEBUG, INFO, WARN, ERROR, FATAL
+  
+  console:
+    enabled: true
+    
+  file:
+    enabled: false
+    path: "/var/log/community/publisher.log"
+    
+  syslog:
+    enabled: false
+    host: "localhost"
+    port: 514

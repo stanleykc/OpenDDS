@@ -1,0 +1,54 @@
+project(*Common) : dcps_idl_only_lib {
+  sharedname     = HsdsCommon
+  dynamicflags   = HSDSCOMMON_BUILD_DLL
+  requires += no_opendds_safety_profile
+  after    += Svc_Utils
+  idlflags      += -Wb,export_macro=HsdsCommon_Export \
+                   -Wb,export_include=HsdsCommon_Export.h
+  dcps_ts_flags += -Wb,export_macro=HsdsCommon_Export
+
+  TypeSupport_Files {
+    hsds.idl
+  }
+
+  IDL_Files {
+    hsdsTypeSupport.idl
+    hsds.idl
+  }
+}
+
+project(*Publisher) : dcpsexe, dcps_tcp {
+  after    += *Common
+  exename   = community_publisher
+  requires += no_opendds_safety_profile
+
+  libs     += HsdsCommon
+
+  IDL_Files {
+  }
+
+  TypeSupport_Files {
+  }
+
+  Header_Files {
+    config.h
+    hsds_publisher.h
+    hsds_validator.h
+    http_server.h
+  }
+
+  Source_Files {
+    community_publisher.cpp
+    config.cpp
+    hsds_publisher.cpp
+    hsds_validator.cpp
+    http_server.cpp
+  }
+
+  Documentation_Files {
+    community-app-design.md
+    community_app_design_1.md
+    community_publisher_config.yaml
+    README.md
+  }
+}
