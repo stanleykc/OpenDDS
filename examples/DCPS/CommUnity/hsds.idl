@@ -1,0 +1,325 @@
+// HSDS.idl - Complete Human Services Data Specification IDL
+module HSDS {
+
+  @topic
+  struct Organization {
+    @key string id;
+    string name;
+    string alternate_name;
+    string description;
+    string email;
+    string website;
+    string tax_status;
+    string tax_id;
+    long year_incorporated;
+    string legal_status;
+    string logo;
+    string uri;
+    string parent_organization_id;
+    string dmp_source_id;  // Added for non-repudiation
+  };
+
+  @topic
+  struct Program {
+    @key string id;
+    string organization_id;
+    string name;
+    string alternate_name;
+    string description;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Service {
+    @key string id;
+    string organization_id;
+    string program_id;
+    string name;
+    string alternate_name;
+    string description;
+    string url;
+    string email;
+    string status;
+    string interpretation_services;
+    string application_process;
+    string fees_description;
+    string wait_time;
+    string fees;
+    string accreditations;
+    string eligibility_description;
+    long minimum_age;
+    long maximum_age;
+    string assured_date;
+    string assurer_email;
+    string licenses;
+    string alert;
+    string last_modified;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Location {
+    @key string id;
+    string location_type;
+    string url;
+    string organization_id;
+    string name;
+    string alternate_name;
+    string description;
+    string transportation;
+    double latitude;
+    double longitude;
+    string external_identifier;
+    string external_identifier_type;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Phone {
+    @key string id;
+    string location_id;
+    string service_id;
+    string organization_id;
+    string contact_id;
+    string service_at_location_id;
+    string number;
+    long extension;
+    string type;
+    string description;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Contact {
+    @key string id;
+    string organization_id;
+    string service_id;
+    string service_at_location_id;
+    string location_id;
+    string name;
+    string title;
+    string department;
+    string email;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Address {
+    @key string id;
+    string location_id;
+    string attention;
+    string address_1;
+    string address_2;
+    string city;
+    string region;
+    string state_province;
+    string postal_code;
+    string country;
+    string address_type;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct ServiceAtLocation {
+    @key string id;
+    string service_id;
+    string location_id;
+    string description;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Schedule {
+    @key string id;
+    string service_id;
+    string location_id;
+    string service_at_location_id;
+    string valid_from;
+    string valid_to;
+    string dtstart;
+    long timezone;
+    string until;
+    long count;
+    string wkst;
+    string freq;
+    long interval;
+    string byday;
+    string byweekno;
+    string bymonthday;
+    string byyearday;
+    string description;
+    string opens_at;
+    string closes_at;
+    string schedule_link;
+    string attending_type;
+    string notes;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct AttributeInfo {
+    @key string id;
+    string link_id;
+    string taxonomy_term_id;
+    string link_type;
+    string link_entity;
+    string value;
+    string label;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Funding {
+    @key string id;
+    string organization_id;
+    string service_id;
+    string source;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct ServiceArea {
+    @key string id;
+    string service_id;
+    string service_at_location_id;
+    string name;
+    string description;
+    string extent;
+    string extent_type;
+    string uri;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct RequiredDocument {
+    @key string id;
+    string service_id;
+    string document;
+    string uri;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Language {
+    @key string id;
+    string service_id;
+    string location_id;
+    string phone_id;
+    string name;
+    string code;
+    string note;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Accessibility {
+    @key string id;
+    string location_id;
+    string description;
+    string details;
+    string url;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct TaxonomyTerm {
+    @key string id;
+    string code;
+    string name;
+    string description;
+    string parent_id;
+    string taxonomy;
+    string language;
+    string taxonomy_id;
+    string term_uri;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Metadata {
+    @key string id;
+    string resource_id;
+    string resource_type;
+    string last_action_date;
+    string last_action_type;
+    string field_name;
+    string previous_value;
+    string replacement_value;
+    string updated_by;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct MetaTableDescription {
+    @key string id;
+    string name;
+    string language;
+    string character_set;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct CostOption {
+    @key string id;
+    string service_id;
+    string valid_from;
+    string valid_to;
+    string option;
+    string currency;
+    double amount;
+    string amount_description;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct OrganizationIdentifier {
+    @key string id;
+    string organization_id;
+    string identifier_scheme;
+    string identifier_type;
+    string identifier;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Taxonomy {
+    @key string id;
+    string name;
+    string description;
+    string uri;
+    string version;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct ServiceCapacity {
+    @key string id;
+    string service_id;
+    string unit_id;
+    long available;
+    long maximum;
+    string description;
+    string updated;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct Unit {
+    @key string id;
+    string name;
+    string scheme;
+    string identifier;
+    string uri;
+    string dmp_source_id;
+  };
+
+  @topic
+  struct UrlInfo {
+    @key string id;
+    string label;
+    string url_value;
+    string organization_id;
+    string service_id;
+    string dmp_source_id;
+  };
+};
