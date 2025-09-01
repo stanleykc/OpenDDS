@@ -1,0 +1,68 @@
+/**
+ * JsonDocument.idl - Data model for distributed JSON document collaboration
+ * 
+ * This IDL defines the data structures for synchronizing JSON documents
+ * across multiple nodes using JSON Patch operations (RFC 6902).
+ */
+
+module DistributedJSON {
+
+  /**
+   * JSON Patch operations as defined in RFC 6902
+   */
+  enum PatchOperation {
+    ADD,        // Add a value to an object or insert into an array
+    REMOVE,     // Remove a value from an object or array
+    REPLACE,    // Replace a value (equivalent to remove + add)
+    MOVE,       // Move a value from one location to another
+    COPY,       // Copy a value from one location to another
+    TEST        // Test that a value at target location equals specified value
+  };
+
+  /**
+   * Primary data structure for JSON document synchronization
+   * 
+   * Each JsonPatch represents either:
+   * 1. An initial document publication (is_full_document = true)
+   * 2. A incremental patch operation (is_full_document = false)
+   */
+  @topic
+  struct JsonPatch {
+    @key long document_id;           // Unique identifier for the document
+    string document_name;            // Human-readable document name
+    string change_source;            // Name of node that created this change
+    
+    // Version control
+    long previous_version;           // Version this patch applies to (-1 for initial)
+    long new_version;               // Version after applying this patch
+    
+    // JSON Patch operation fields (RFC 6902)
+    PatchOperation operation;        // Type of patch operation
+    string path;                    // JSON Pointer path (e.g., "/users/0/name")
+    string value;                   // New value (for ADD/REPLACE operations)
+    string from_path;               // Source path (for MOVE/COPY operations)
+    
+    // Full document content (for initial document publication)
+    string full_document;           // Complete JSON document content
+    boolean is_full_document;       // True for initial doc, false for patches
+    
+    // Metadata and integrity
+    long long timestamp;            // Creation timestamp (milliseconds since epoch)
+    string checksum;               // SHA256 hash of resulting document
+    string comment;                // Optional description of the change
+  };
+
+  /**
+   * Document metadata for tracking and discovery
+   */
+  struct DocumentInfo {
+    long document_id;
+    string document_name;
+    string document_type;           // e.g., "config", "user_profile", "catalog"
+    long current_version;
+    string last_modified_by;
+    long long last_modified_time;
+    long patch_count;              // Total patches applied
+    string schema_version;         // Optional schema identifier
+  };
+};

@@ -1,0 +1,17 @@
+project(DDS*JSON*Node) : dcpsexe {
+  exename   = node
+  requires += built_in_topics
+  requires += no_opendds_safety_profile
+
+  TypeSupport_Files {
+    JsonDocument.idl
+  }
+
+  Source_Files {
+    main.cpp
+    AbstractionLayer.cpp
+    ApplicationLevel.cpp
+    JsonDocumentListener.cpp
+    JsonUtils.cpp
+  }
+}
