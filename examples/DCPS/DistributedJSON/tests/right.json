@@ -1,0 +1,6 @@
+{
+  "name": "Kevin",
+  "address": { "street": "123 Main St.", "city": "Anytown", "state": "CA" },
+  "age": 62,
+  "phoneNumbers": ["555-1234", "555-5678"]
+}

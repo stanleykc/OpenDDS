@@ -1,0 +1,11 @@
+{
+  "name": "cpp-js-interop",
+  "version": "1.0.0",
+  "description": "Example of calling a Node.js library from C++.",
+  "main": "diff_wrapper.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jsondiffpatch": "^0.6.0"
+  }
+}
