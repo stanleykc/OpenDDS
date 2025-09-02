@@ -1,0 +1,27 @@
+// FileSync.idl
+// IDL definitions for File_Sync application data types
+
+module FileSync {
+    
+    // File metadata for control messages
+    #pragma DCPS_DATA_TYPE "FileSync::FileMetadata"
+    #pragma DCPS_DATA_KEY "FileSync::FileMetadata file_id"
+    struct FileMetadata {
+        string file_id;         // Relative path from source directory (key)
+        long long mod_time;     // Modification timestamp (seconds since epoch)
+        string file_hash;       // SHA-256 hash of complete file content
+        boolean is_deleted;     // True if file was deleted
+        string publisher_id;    // Unique identifier for publishing peer
+    };
+    
+    // File content chunks for bulk data transfer
+    #pragma DCPS_DATA_TYPE "FileSync::FileChunk"
+    #pragma DCPS_DATA_KEY "FileSync::FileChunk file_id, sequence_number"
+    struct FileChunk {
+        string file_id;         // Matches FileMetadata.file_id (part of key)
+        long sequence_number;   // Chunk sequence number (part of key)
+        long total_chunks;      // Total number of chunks for this file
+        sequence<octet> data;   // Raw chunk data (max 64KB)
+        string file_hash;       // SHA-256 hash (redundant for verification)
+    };
+};

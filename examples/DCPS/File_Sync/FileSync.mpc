@@ -1,0 +1,78 @@
+project(DDS*File*Sync) : dcpsexe {
+  exename   = file_sync
+  requires += built_in_topics
+  requires += no_opendds_safety_profile
+  
+  includes += src
+
+  TypeSupport_Files {
+    idl/FileSync.idl
+  }
+
+  Header_Files {
+    src/FileSyncApplication.h
+    src/ConfigurationManager.h
+    src/FileSystemMonitor.h
+    src/FileManager.h
+    src/dds/FileMetadataPublisher.h
+    src/dds/FileMetadataSubscriber.h
+    src/dds/FileChunkPublisher.h
+    src/dds/FileChunkSubscriber.h
+  }
+
+  Source_Files {
+    src/main.cpp
+    src/FileSyncApplication.cpp
+    src/ConfigurationManager.cpp
+    src/FileSystemMonitor.cpp
+    src/FileManager.cpp
+    src/dds/FileMetadataPublisher.cpp
+    src/dds/FileMetadataSubscriber.cpp
+    src/dds/FileChunkPublisher.cpp
+    src/dds/FileChunkSubscriber.cpp
+  }
+}
+
+// Unit test project
+project(DDS*File*Sync*Tests) : dcpsexe, dcps_transports_for_tests {
+  after    += DDS*File*Sync
+  exename   = file_sync_tests
+  requires += built_in_topics
+  requires += no_opendds_safety_profile
+
+  includes += src
+  includes += tests/unit
+
+  // Use the same TypeSupport files
+  TypeSupport_Files {
+    idl/FileSync.idl
+  }
+
+  // Include source files we want to test (excluding main.cpp)
+  Source_Files {
+    src/FileSyncApplication.cpp
+    src/ConfigurationManager.cpp
+    src/FileSystemMonitor.cpp
+    src/FileManager.cpp
+    src/dds/FileMetadataPublisher.cpp
+    src/dds/FileMetadataSubscriber.cpp
+    src/dds/FileChunkPublisher.cpp
+    src/dds/FileChunkSubscriber.cpp
+    
+    // Test files
+    tests/unit/test_main.cpp
+    tests/unit/test_ConfigurationManager.cpp
+    tests/unit/test_FileManager.cpp
+  }
+
+  Header_Files {
+    src/FileSyncApplication.h
+    src/ConfigurationManager.h
+    src/FileSystemMonitor.h
+    src/FileManager.h
+    src/dds/FileMetadataPublisher.h
+    src/dds/FileMetadataSubscriber.h
+    src/dds/FileChunkPublisher.h
+    src/dds/FileChunkSubscriber.h
+  }
+}

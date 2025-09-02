@@ -1,0 +1,55 @@
+# File_Sync Configuration Example
+# Copy this file to file_sync.conf and modify as needed
+
+[directories]
+# Source directory to monitor for changes (required)
+source_dir=/home/user/sync_source
+
+# Destination directory where synchronized files will be written (required)
+dest_dir=/home/user/sync_dest
+
+[dds]
+# DDS domain ID (0-232, default: 42)
+domain_id=42
+
+# Optional DDS configuration file for advanced settings
+# dcps_config_file=dds_config.ini
+
+[security]
+# DDS Security configuration (optional, but recommended for production)
+# All security files must exist for security to be enabled
+
+# Certificate Authority for identity certificates
+# identity_ca=/path/to/security/identity_ca.pem
+
+# Certificate Authority for permissions
+# permissions_ca=/path/to/security/permissions_ca.pem
+
+# This peer's identity certificate
+# identity_certificate=/path/to/security/identity_certificate.pem
+
+# This peer's private key
+# identity_private_key=/path/to/security/identity_private_key.pem
+
+# Permissions configuration file
+# permissions_file=/path/to/security/permissions.xml
+
+# Security governance policy file
+# governance_file=/path/to/security/governance.xml
+
+[sync]
+# Size of each chunk when transferring files (bytes, default: 65536)
+chunk_size=65536
+
+# Maximum file size to synchronize (bytes, default: 104857600 = 100MB)
+max_file_size=104857600
+
+# File patterns to exclude from synchronization (comma-separated)
+excluded_patterns=*.tmp,*.swp,*~,.DS_Store,.git/*,*.log
+
+[logging]
+# Log level: debug, info, warning, error (default: info)
+level=info
+
+# Log file path (leave empty for stdout)
+# file=/var/log/file_sync.log
