@@ -324,8 +324,8 @@ Options:
 
 ### 8.1 Scalability Targets
 - Support 1000+ files per directory
-- Handle file sizes up to 100MB
-- Support 5-10 concurrent peers
+- Handle file sizes up to 5MB
+- Support 50-100 concurrent peers
 - Process 100+ file changes per minute
 
 ### 8.2 Optimizations

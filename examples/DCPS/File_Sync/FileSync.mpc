@@ -1,5 +1,5 @@
 project(DDS*Node) : dcpsexe {
-  exename   = node
+  exename   = filesync
   requires += built_in_topics
   requires += no_opendds_safety_profile
 
