@@ -1,0 +1,1 @@
+- source /workspace/setenv.sh
