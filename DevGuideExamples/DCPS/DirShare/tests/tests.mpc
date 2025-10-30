@@ -1,10 +1,11 @@
 // MPC file for DirShare unit tests
 
-project(*ChecksumTest): aceexe {
+project(*ChecksumTest): aceexe, dcps {
   exename = ChecksumTest
   after  += DirShare_lib
 
   libs += DirShare
+  libpaths += ..
 
   Source_Files {
     ChecksumTest.cpp
@@ -14,11 +15,12 @@ project(*ChecksumTest): aceexe {
   }
 }
 
-project(*FileUtilsTest): aceexe {
+project(*FileUtilsTest): aceexe, dcps {
   exename = FileUtilsTest
   after  += DirShare_lib
 
   libs += DirShare
+  libpaths += ..
 
   Source_Files {
     FileUtilsTest.cpp
@@ -33,6 +35,7 @@ project(*FileMonitorTest): aceexe, dcps {
   after  += DirShare_lib
 
   libs += DirShare
+  libpaths += ..
 
   Source_Files {
     FileMonitorTest.cpp
@@ -40,4 +43,63 @@ project(*FileMonitorTest): aceexe, dcps {
 
   Header_Files {
   }
+}
+
+// Boost.Test unit tests
+
+project(*ChecksumBoostTest): aceexe, dcps {
+  exename = ChecksumBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  Source_Files {
+    ChecksumBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}
+
+project(*FileUtilsBoostTest): aceexe, dcps {
+  exename = FileUtilsBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  Source_Files {
+    FileUtilsBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}
+
+project(*FileMonitorBoostTest): aceexe, dcps {
+  exename = FileMonitorBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  Source_Files {
+    FileMonitorBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
 }

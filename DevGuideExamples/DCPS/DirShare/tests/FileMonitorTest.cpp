@@ -33,6 +33,13 @@ int g_tests_failed = 0;
     throw "Assertion failed"; \
   }
 
+#define ASSERT_STR_EQ(a, b) \
+  if (std::string(a) != std::string(b)) { \
+    ACE_ERROR((LM_ERROR, ACE_TEXT("    Assertion failed: '%C' != '%C' at line %d\n"), \
+               std::string(a).c_str(), std::string(b).c_str(), __LINE__)); \
+    throw "Assertion failed"; \
+  }
+
 #define ASSERT_TRUE(expr) \
   if (!(expr)) { \
     ACE_ERROR((LM_ERROR, ACE_TEXT("    Assertion failed: %C at line %d\n"), \
@@ -88,7 +95,7 @@ TEST(detect_file_creation)
   // Scan again
   monitor.scan_for_changes(created, modified, deleted);
   ASSERT_EQ(created.size(), 1u);
-  ASSERT_EQ(created[0], "newfile.txt");
+  ASSERT_STR_EQ(created[0], "newfile.txt");
   ASSERT_EQ(modified.size(), 0u);
   ASSERT_EQ(deleted.size(), 0u);
 
@@ -126,7 +133,7 @@ TEST(detect_file_modification)
   monitor.scan_for_changes(created, modified, deleted);
   ASSERT_EQ(created.size(), 0u);
   ASSERT_EQ(modified.size(), 1u);
-  ASSERT_EQ(modified[0], "testfile.txt");
+  ASSERT_STR_EQ(modified[0], "testfile.txt");
   ASSERT_EQ(deleted.size(), 0u);
 
   cleanup_test_directory(test_dir);
@@ -159,7 +166,7 @@ TEST(detect_file_deletion)
   ASSERT_EQ(created.size(), 0u);
   ASSERT_EQ(modified.size(), 0u);
   ASSERT_EQ(deleted.size(), 1u);
-  ASSERT_EQ(deleted[0], "deleteme.txt");
+  ASSERT_STR_EQ(deleted[0], "deleteme.txt");
 
   cleanup_test_directory(test_dir);
 }
@@ -259,7 +266,7 @@ TEST(get_file_metadata)
   ASSERT_TRUE(result);
 
   // Verify metadata
-  ASSERT_EQ(std::string(metadata.filename.in()), "metadata_test.txt");
+  ASSERT_STR_EQ(std::string(metadata.filename.in()), "metadata_test.txt");
   ASSERT_EQ(metadata.size, strlen(content));
   ASSERT_TRUE(metadata.checksum != 0); // Should have valid checksum
 

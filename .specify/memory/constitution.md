@@ -75,7 +75,11 @@ Examples MUST demonstrate the full DDS entity lifecycle including proper initial
 
 ### IV. Test-Driven Validation
 
+All components must be validated through automated unit tests using Boost to ensure correct functionality and prevent regressions.
+
 Every example MUST include automated testing via Perl launcher scripts that validate publisher-subscriber communication.
+
+
 
 **Requirements**:
 - Provide `run_test.pl` using PerlDDS::Run_Test framework

@@ -1,9 +1,10 @@
 # Tasks: DirShare - Distributed File Synchronization
 
+**Feature Branch**: `001-dirshare`
 **Input**: Design documents from `/specs/001-dirshare/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/topics.md ✅
 
-**Tests**: NOT EXPLICITLY REQUESTED in spec.md. Basic test automation via run_test.pl is included per OpenDDS constitution.
+**Tests**: ✅ **Comprehensive Boost.Test unit test development requested**. All new components will have Boost.Test coverage.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -17,6 +18,7 @@
 
 - **OpenDDS Example Structure**: `DevGuideExamples/DCPS/DirShare/` at repository root
 - Test scripts: `run_test.pl` in example directory
+- Unit tests: `DevGuideExamples/DCPS/DirShare/tests/` using Boost.Test framework
 - Configuration: `rtps.ini` for RTPS discovery mode
 
 ---
@@ -64,9 +66,11 @@
 
 **Checkpoint**: Foundation ready - DDS infrastructure initialized, topics created, user story implementation can now begin
 
-### Phase 2 Testing ✅ COMPLETE
+### Phase 2 Testing ✅ COMPLETE (Basic custom framework)
 
 **Purpose**: Validate Phase 2 components in isolation before DDS integration
+
+**Note**: These tests currently use a custom test framework. Task T027h below adds Boost.Test versions.
 
 - [x] T027a Create unit test for Checksum utilities (`tests/ChecksumTest.cpp`)
 - [x] T027b Create unit test for FileUtils utilities (`tests/FileUtilsTest.cpp`)
@@ -76,16 +80,29 @@
 - [x] T027f Update DirShare.mpc to create shared library for tests
 - [x] T027g Document test framework and usage (`tests/README.md`)
 
-**Test Coverage**:
+**Test Coverage** (custom framework):
 - Checksum: 6 tests (empty data, known values, incremental, file-based, error handling)
 - FileUtils: 11 tests (read/write, file operations, validation, timestamps)
 - FileMonitor: 7 tests (change detection, metadata, error handling)
 
-**How to run tests**:
+### Phase 2 Boost.Test Migration ✅ COMPLETE
+
+**Purpose**: Migrate existing unit tests to Boost.Test framework and expand coverage
+
+- [x] T027h [P] Convert ChecksumTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/ChecksumBoostTest.cpp`
+- [x] T027i [P] Convert FileUtilsTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/FileUtilsBoostTest.cpp`
+- [x] T027j [P] Convert FileMonitorTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/FileMonitorBoostTest.cpp`
+- [x] T027k [P] Add Boost.Test MPC configuration in `tests/tests.mpc` with boost_base
+- [x] T027l [P] Update test runner script to run both custom and Boost.Test suites in `tests/run_tests.pl`
+- [x] T027m [P] Add Boost.Test documentation to `tests/README.md`
+
+**How to run Boost.Test suites**:
 ```bash
 cd DevGuideExamples/DCPS/DirShare/tests
 mwc.pl -type gnuace tests.mpc && make
-./run_tests.pl
+./ChecksumBoostTest --log_level=all
+./FileUtilsBoostTest --log_level=all
+./FileMonitorBoostTest --log_level=all
 ```
 
 ---
@@ -121,7 +138,22 @@ mwc.pl -type gnuace tests.mpc && make
 - [ ] T048 [US1] Add error handling for checksum mismatches in all listeners
 - [ ] T049 [US1] Add ACE logging for initial synchronization events (snapshot sent/received, files transferred)
 
-**Checkpoint**: Initial directory synchronization complete - two instances synchronize existing files on startup
+### Boost.Test Unit Tests for User Story 1 🎯 NEW
+
+- [ ] T050 [P] [US1] Create Boost.Test suite for DirectorySnapshot logic in `tests/DirectorySnapshotBoostTest.cpp`
+- [ ] T051 [P] [US1] Add Boost.Test cases for snapshot comparison (missing files, existing files, identical files) in `tests/DirectorySnapshotBoostTest.cpp`
+- [ ] T052 [P] [US1] Create Boost.Test suite for FileContent transfer in `tests/FileContentBoostTest.cpp`
+- [ ] T053 [P] [US1] Add Boost.Test cases for small file transfer (<10MB) in `tests/FileContentBoostTest.cpp`
+- [ ] T054 [P] [US1] Add Boost.Test cases for checksum verification in `tests/FileContentBoostTest.cpp`
+- [ ] T055 [P] [US1] Add Boost.Test cases for timestamp preservation in `tests/FileContentBoostTest.cpp`
+- [ ] T056 [P] [US1] Create Boost.Test suite for FileChunk chunking logic in `tests/FileChunkBoostTest.cpp`
+- [ ] T057 [P] [US1] Add Boost.Test cases for chunk calculation (10MB threshold, 1MB chunks) in `tests/FileChunkBoostTest.cpp`
+- [ ] T058 [P] [US1] Add Boost.Test cases for chunk reassembly (in-order, out-of-order) in `tests/FileChunkBoostTest.cpp`
+- [ ] T059 [P] [US1] Add Boost.Test cases for chunk checksum verification in `tests/FileChunkBoostTest.cpp`
+- [ ] T060 [P] [US1] Add Boost.Test cases for file checksum after reassembly in `tests/FileChunkBoostTest.cpp`
+- [ ] T061 [US1] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+
+**Checkpoint**: Initial directory synchronization complete with comprehensive Boost.Test coverage
 
 ---
 
@@ -133,18 +165,29 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 2
 
-- [ ] T050 [P] [US2] Create FileEvent DataWriter in `DirShare.cpp` with QoS policies
-- [ ] T051 [P] [US2] Create FileEvent DataReader with listener in `DirShare.cpp`
-- [ ] T052 [US2] Implement FileEvent listener interface in `DevGuideExamples/DCPS/DirShare/FileEventListenerImpl.h`
-- [ ] T053 [US2] Implement FileEvent listener on_data_available in `DevGuideExamples/DCPS/DirShare/FileEventListenerImpl.cpp`
-- [ ] T054 [US2] Add file creation detection to FileMonitor.cpp (compare current scan with previous scan state)
-- [ ] T055 [US2] Implement publish FileEvent(CREATE) when new file detected in FileMonitor
-- [ ] T056 [US2] Add FileEvent CREATE handling in FileEventListenerImpl (trigger file content transfer)
-- [ ] T057 [US2] Connect FileEvent CREATE to FileContent/FileChunk request logic
-- [ ] T058 [US2] Add validation that file doesn't already exist locally before writing in FileEventListenerImpl
-- [ ] T059 [US2] Add ACE logging for file creation events (detected, published, received, applied)
+- [ ] T062 [P] [US2] Create FileEvent DataWriter in `DirShare.cpp` with QoS policies
+- [ ] T063 [P] [US2] Create FileEvent DataReader with listener in `DirShare.cpp`
+- [ ] T064 [US2] Implement FileEvent listener interface in `DevGuideExamples/DCPS/DirShare/FileEventListenerImpl.h`
+- [ ] T065 [US2] Implement FileEvent listener on_data_available in `DevGuideExamples/DCPS/DirShare/FileEventListenerImpl.cpp`
+- [ ] T066 [US2] Add file creation detection to FileMonitor.cpp (compare current scan with previous scan state)
+- [ ] T067 [US2] Implement publish FileEvent(CREATE) when new file detected in FileMonitor
+- [ ] T068 [US2] Add FileEvent CREATE handling in FileEventListenerImpl (trigger file content transfer)
+- [ ] T069 [US2] Connect FileEvent CREATE to FileContent/FileChunk request logic
+- [ ] T070 [US2] Add validation that file doesn't already exist locally before writing in FileEventListenerImpl
+- [ ] T071 [US2] Add ACE logging for file creation events (detected, published, received, applied)
 
-**Checkpoint**: Real-time file creation working - new files propagate automatically within 5 seconds
+### Boost.Test Unit Tests for User Story 2 🎯 NEW
+
+- [ ] T072 [P] [US2] Create Boost.Test suite for FileEvent creation in `tests/FileEventCreateBoostTest.cpp`
+- [ ] T073 [P] [US2] Add Boost.Test cases for CREATE event detection logic in `tests/FileEventCreateBoostTest.cpp`
+- [ ] T074 [P] [US2] Add Boost.Test cases for CREATE event publishing in `tests/FileEventCreateBoostTest.cpp`
+- [ ] T075 [P] [US2] Add Boost.Test cases for CREATE event handling (trigger transfer) in `tests/FileEventCreateBoostTest.cpp`
+- [ ] T076 [P] [US2] Add Boost.Test cases for file validation (path traversal, absolute paths) in `tests/FileEventCreateBoostTest.cpp`
+- [ ] T077 [P] [US2] Create Boost.Test suite for FileMonitor CREATE detection in `tests/FileMonitorCreateBoostTest.cpp`
+- [ ] T078 [P] [US2] Add Boost.Test cases for scan state comparison in `tests/FileMonitorCreateBoostTest.cpp`
+- [ ] T079 [US2] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+
+**Checkpoint**: Real-time file creation working with comprehensive Boost.Test coverage
 
 ---
 
@@ -156,15 +199,26 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 3
 
-- [ ] T060 [US3] Add file modification detection to FileMonitor.cpp (compare file size, timestamp, or checksum)
-- [ ] T061 [US3] Implement publish FileEvent(MODIFY) when file change detected in FileMonitor
-- [ ] T062 [US3] Add FileEvent MODIFY handling in FileEventListenerImpl (check timestamp for conflict resolution)
-- [ ] T063 [US3] Implement timestamp comparison logic using DDS source_timestamp in FileEventListenerImpl
-- [ ] T064 [US3] Add logic to overwrite local file only if remote timestamp is newer in FileEventListenerImpl
-- [ ] T065 [US3] Add ACE logging for modification events with timestamp comparisons
-- [ ] T066 [US3] Add instrumentation to verify only modified files are transferred (not all files)
+- [ ] T080 [US3] Add file modification detection to FileMonitor.cpp (compare file size, timestamp, or checksum)
+- [ ] T081 [US3] Implement publish FileEvent(MODIFY) when file change detected in FileMonitor
+- [ ] T082 [US3] Add FileEvent MODIFY handling in FileEventListenerImpl (check timestamp for conflict resolution)
+- [ ] T083 [US3] Implement timestamp comparison logic using DDS source_timestamp in FileEventListenerImpl
+- [ ] T084 [US3] Add logic to overwrite local file only if remote timestamp is newer in FileEventListenerImpl
+- [ ] T085 [US3] Add ACE logging for modification events with timestamp comparisons
+- [ ] T086 [US3] Add instrumentation to verify only modified files are transferred (not all files)
 
-**Checkpoint**: File modification propagation working - changes detected and transmitted efficiently with timestamp-based ordering
+### Boost.Test Unit Tests for User Story 3 🎯 NEW
+
+- [ ] T087 [P] [US3] Create Boost.Test suite for FileEvent MODIFY in `tests/FileEventModifyBoostTest.cpp`
+- [ ] T088 [P] [US3] Add Boost.Test cases for modification detection (size change, timestamp change, checksum change) in `tests/FileEventModifyBoostTest.cpp`
+- [ ] T089 [P] [US3] Add Boost.Test cases for MODIFY event publishing in `tests/FileEventModifyBoostTest.cpp`
+- [ ] T090 [P] [US3] Create Boost.Test suite for timestamp comparison in `tests/TimestampComparisonBoostTest.cpp`
+- [ ] T091 [P] [US3] Add Boost.Test cases for timestamp ordering (newer wins, older ignored) in `tests/TimestampComparisonBoostTest.cpp`
+- [ ] T092 [P] [US3] Add Boost.Test cases for DDS source_timestamp extraction in `tests/TimestampComparisonBoostTest.cpp`
+- [ ] T093 [P] [US3] Add Boost.Test cases for efficiency verification (only modified files) in `tests/FileEventModifyBoostTest.cpp`
+- [ ] T094 [US3] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+
+**Checkpoint**: File modification propagation working with comprehensive Boost.Test coverage
 
 ---
 
@@ -176,14 +230,24 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 4
 
-- [ ] T067 [US4] Add file deletion detection to FileMonitor.cpp (file present in previous scan, absent in current)
-- [ ] T068 [US4] Implement publish FileEvent(DELETE) when file deletion detected in FileMonitor
-- [ ] T069 [US4] Add FileEvent DELETE handling in FileEventListenerImpl (check timestamp, delete local file)
-- [ ] T070 [US4] Add timestamp comparison for delete events (respect last-write-wins for delete vs modify conflicts)
-- [ ] T071 [US4] Add error handling for deletion failures (file in use, permission denied) in FileEventListenerImpl
-- [ ] T072 [US4] Add ACE logging for deletion events (detected, published, received, applied)
+- [ ] T095 [US4] Add file deletion detection to FileMonitor.cpp (file present in previous scan, absent in current)
+- [ ] T096 [US4] Implement publish FileEvent(DELETE) when file deletion detected in FileMonitor
+- [ ] T097 [US4] Add FileEvent DELETE handling in FileEventListenerImpl (check timestamp, delete local file)
+- [ ] T098 [US4] Add timestamp comparison for delete events (respect last-write-wins for delete vs modify conflicts)
+- [ ] T099 [US4] Add error handling for deletion failures (file in use, permission denied) in FileEventListenerImpl
+- [ ] T100 [US4] Add ACE logging for deletion events (detected, published, received, applied)
 
-**Checkpoint**: File deletion propagation working - deletions propagate automatically with conflict resolution
+### Boost.Test Unit Tests for User Story 4 🎯 NEW
+
+- [ ] T101 [P] [US4] Create Boost.Test suite for FileEvent DELETE in `tests/FileEventDeleteBoostTest.cpp`
+- [ ] T102 [P] [US4] Add Boost.Test cases for deletion detection in `tests/FileEventDeleteBoostTest.cpp`
+- [ ] T103 [P] [US4] Add Boost.Test cases for DELETE event publishing in `tests/FileEventDeleteBoostTest.cpp`
+- [ ] T104 [P] [US4] Add Boost.Test cases for DELETE event handling in `tests/FileEventDeleteBoostTest.cpp`
+- [ ] T105 [P] [US4] Add Boost.Test cases for delete-modify conflict resolution in `tests/FileEventDeleteBoostTest.cpp`
+- [ ] T106 [P] [US4] Add Boost.Test cases for deletion error handling in `tests/FileEventDeleteBoostTest.cpp`
+- [ ] T107 [US4] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+
+**Checkpoint**: File deletion propagation working with comprehensive Boost.Test coverage
 
 ---
 
@@ -195,13 +259,22 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 5
 
-- [ ] T073 [US5] Refine timestamp comparison logic in FileEventListenerImpl to handle millisecond precision
-- [ ] T074 [US5] Add tie-breaker logic for identical timestamps (use participant GUID or checksum) in FileEventListenerImpl
-- [ ] T075 [US5] Add test scenario for concurrent modifications in `run_test.pl` (modify same file simultaneously)
-- [ ] T076 [US5] Add ACE logging for conflict resolution decisions (which version won, why)
-- [ ] T077 [US5] Add verification that all participants converge to same final state after conflict
+- [ ] T108 [US5] Refine timestamp comparison logic in FileEventListenerImpl to handle millisecond precision
+- [ ] T109 [US5] Add tie-breaker logic for identical timestamps (use participant GUID or checksum) in FileEventListenerImpl
+- [ ] T110 [US5] Add test scenario for concurrent modifications in `run_test.pl` (modify same file simultaneously)
+- [ ] T111 [US5] Add ACE logging for conflict resolution decisions (which version won, why)
+- [ ] T112 [US5] Add verification that all participants converge to same final state after conflict
 
-**Checkpoint**: Conflict resolution working - simultaneous modifications resolved deterministically
+### Boost.Test Unit Tests for User Story 5 🎯 NEW
+
+- [ ] T113 [P] [US5] Create Boost.Test suite for conflict resolution in `tests/ConflictResolutionBoostTest.cpp`
+- [ ] T114 [P] [US5] Add Boost.Test cases for millisecond precision timestamp comparison in `tests/ConflictResolutionBoostTest.cpp`
+- [ ] T115 [P] [US5] Add Boost.Test cases for tie-breaker logic (GUID, checksum) in `tests/ConflictResolutionBoostTest.cpp`
+- [ ] T116 [P] [US5] Add Boost.Test cases for last-write-wins determinism in `tests/ConflictResolutionBoostTest.cpp`
+- [ ] T117 [P] [US5] Add Boost.Test cases for concurrent modification scenarios in `tests/ConflictResolutionBoostTest.cpp`
+- [ ] T118 [US5] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+
+**Checkpoint**: Conflict resolution working with comprehensive Boost.Test coverage
 
 ---
 
@@ -213,15 +286,24 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 6
 
-- [ ] T078 [P] [US6] Verify FileMetadata includes size, timestamp in all FileEvent publications
-- [ ] T079 [P] [US6] Verify FileContent includes size, timestamp, checksum in publications
-- [ ] T080 [P] [US6] Verify FileChunk includes file_size, timestamp, checksums in publications
-- [ ] T081 [US6] Add timestamp preservation logic to FileContentListenerImpl using ACE or filesystem API
-- [ ] T082 [US6] Add timestamp preservation logic to FileChunkListenerImpl after reassembly
-- [ ] T083 [US6] Add metadata validation in all listeners (size matches actual data, timestamps reasonable)
-- [ ] T084 [US6] Add ACE logging for metadata preservation (original vs preserved timestamps)
+- [ ] T119 [P] [US6] Verify FileMetadata includes size, timestamp in all FileEvent publications
+- [ ] T120 [P] [US6] Verify FileContent includes size, timestamp, checksum in publications
+- [ ] T121 [P] [US6] Verify FileChunk includes file_size, timestamp, checksums in publications
+- [ ] T122 [US6] Add timestamp preservation logic to FileContentListenerImpl using ACE or filesystem API
+- [ ] T123 [US6] Add timestamp preservation logic to FileChunkListenerImpl after reassembly
+- [ ] T124 [US6] Add metadata validation in all listeners (size matches actual data, timestamps reasonable)
+- [ ] T125 [US6] Add ACE logging for metadata preservation (original vs preserved timestamps)
 
-**Checkpoint**: Metadata preservation working - timestamps and file properties maintained across transfers
+### Boost.Test Unit Tests for User Story 6 🎯 NEW
+
+- [ ] T126 [P] [US6] Create Boost.Test suite for metadata preservation in `tests/MetadataPreservationBoostTest.cpp`
+- [ ] T127 [P] [US6] Add Boost.Test cases for timestamp extraction (nanosecond precision) in `tests/MetadataPreservationBoostTest.cpp`
+- [ ] T128 [P] [US6] Add Boost.Test cases for timestamp preservation on file write in `tests/MetadataPreservationBoostTest.cpp`
+- [ ] T129 [P] [US6] Add Boost.Test cases for metadata validation (size, checksum) in `tests/MetadataPreservationBoostTest.cpp`
+- [ ] T130 [P] [US6] Add Boost.Test cases for special characters in filenames in `tests/MetadataPreservationBoostTest.cpp`
+- [ ] T131 [US6] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+
+**Checkpoint**: Metadata preservation working with comprehensive Boost.Test coverage
 
 ---
 
@@ -229,26 +311,49 @@ mwc.pl -type gnuace tests.mpc && make
 
 **Purpose**: Testing, documentation, and OpenDDS constitution compliance
 
-- [ ] T085 [P] Create test script `DevGuideExamples/DCPS/DirShare/run_test.pl` using PerlDDS::TestFramework
-- [ ] T086 [P] Add InfoRepo mode test to run_test.pl (default mode with DCPSInfoRepo)
-- [ ] T087 [P] Add RTPS mode test to run_test.pl (--rtps flag, uses rtps.ini)
-- [ ] T088 [P] Add test scenario for basic file sync (2 participants, create file, verify propagation)
-- [ ] T089 [P] Add test scenario for large file transfer (>=10MB, verify chunking and reassembly)
-- [ ] T090 [P] Add test scenario for file deletion (create, sync, delete, verify deletion propagates)
-- [ ] T091 Add error handling for missing directory argument in DirShare.cpp
-- [ ] T092 Add validation that specified directory exists and is writable in DirShare.cpp
-- [ ] T093 Add help message (-h, --help) to DirShare.cpp showing usage and options
-- [ ] T094 Add static build support with conditional OPENDDS_DO_MANUAL_STATIC_INCLUDES in DirShare.cpp
-- [ ] T095 [P] Update README.md with build instructions (MPC and CMake)
-- [ ] T096 [P] Update README.md with usage examples (InfoRepo and RTPS modes)
-- [ ] T097 [P] Add troubleshooting section to README.md
-- [ ] T098 Code review for ACE error handling patterns (ACE_ERROR_RETURN, ACE_DEBUG)
-- [ ] T099 Code review for proper DDS return code checking (all operations check RETCODE_OK)
-- [ ] T100 Verify both MPC and CMake builds compile successfully
-- [ ] T101 Run run_test.pl in InfoRepo mode and verify PASS
-- [ ] T102 Run run_test.pl in RTPS mode (--rtps) and verify PASS
-- [ ] T103 [P] Manual test: Run quickstart.md validation scenarios
-- [ ] T104 Memory leak check with valgrind or similar tool (optional)
+### Integration Testing
+
+- [ ] T132 [P] Create test script `DevGuideExamples/DCPS/DirShare/run_test.pl` using PerlDDS::TestFramework
+- [ ] T133 [P] Add InfoRepo mode test to run_test.pl (default mode with DCPSInfoRepo)
+- [ ] T134 [P] Add RTPS mode test to run_test.pl (--rtps flag, uses rtps.ini)
+- [ ] T135 [P] Add test scenario for basic file sync (2 participants, create file, verify propagation)
+- [ ] T136 [P] Add test scenario for large file transfer (>=10MB, verify chunking and reassembly)
+- [ ] T137 [P] Add test scenario for file deletion (create, sync, delete, verify deletion propagates)
+
+### Additional Boost.Test Suites 🎯 NEW
+
+- [ ] T138 [P] Create Boost.Test suite for DDS initialization in `tests/DDSInitBoostTest.cpp`
+- [ ] T139 [P] Add Boost.Test cases for TypeSupport registration in `tests/DDSInitBoostTest.cpp`
+- [ ] T140 [P] Add Boost.Test cases for topic creation with QoS in `tests/DDSInitBoostTest.cpp`
+- [ ] T141 [P] Add Boost.Test cases for DDS cleanup (no leaks) in `tests/DDSInitBoostTest.cpp`
+- [ ] T142 [P] Create Boost.Test suite for QoS policies in `tests/QoSPolicyBoostTest.cpp`
+- [ ] T143 [P] Add Boost.Test cases for RELIABLE reliability QoS in `tests/QoSPolicyBoostTest.cpp`
+- [ ] T144 [P] Add Boost.Test cases for TRANSIENT_LOCAL durability QoS in `tests/QoSPolicyBoostTest.cpp`
+- [ ] T145 [P] Add Boost.Test cases for history depth and lifespan in `tests/QoSPolicyBoostTest.cpp`
+- [ ] T146 [P] Create Boost.Test master suite runner in `tests/BoostTestRunner.cpp`
+- [ ] T147 Update tests.mpc with all Boost.Test executables in `tests/tests.mpc`
+
+### Application Polish
+
+- [ ] T148 Add error handling for missing directory argument in DirShare.cpp
+- [ ] T149 Add validation that specified directory exists and is writable in DirShare.cpp
+- [ ] T150 Add help message (-h, --help) to DirShare.cpp showing usage and options
+- [ ] T151 Add static build support with conditional OPENDDS_DO_MANUAL_STATIC_INCLUDES in DirShare.cpp
+- [ ] T152 [P] Update README.md with build instructions (MPC and CMake)
+- [ ] T153 [P] Update README.md with usage examples (InfoRepo and RTPS modes)
+- [ ] T154 [P] Add troubleshooting section to README.md
+- [ ] T155 [P] Document Boost.Test framework usage in tests/README.md
+
+### Code Quality & Validation
+
+- [ ] T156 Code review for ACE error handling patterns (ACE_ERROR_RETURN, ACE_DEBUG)
+- [ ] T157 Code review for proper DDS return code checking (all operations check RETCODE_OK)
+- [ ] T158 Verify both MPC and CMake builds compile successfully
+- [ ] T159 Run run_test.pl in InfoRepo mode and verify PASS
+- [ ] T160 Run run_test.pl in RTPS mode (--rtps) and verify PASS
+- [ ] T161 Run all Boost.Test suites and verify 100% pass rate
+- [ ] T162 [P] Manual test: Run quickstart.md validation scenarios
+- [ ] T163 Memory leak check with valgrind (optional but recommended)
 
 ---
 
@@ -256,8 +361,9 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Phase 1 completion - BLOCKS all user stories
+- **Setup (Phase 1)**: ✅ COMPLETED
+- **Foundational (Phase 2)**: ✅ COMPLETED - BLOCKED all user stories
+- **Boost.Test Migration (Phase 2 extension)**: Can start now - Converts existing tests
 - **User Stories (Phases 3-8)**: All depend on Phase 2 (Foundational) completion
   - US1 (Phase 3): Initial Sync - Must complete first (foundation for other stories)
   - US2 (Phase 4): File Creation - Depends on US1 (needs initial sync working)
@@ -267,110 +373,32 @@ mwc.pl -type gnuace tests.mpc && make
   - US6 (Phase 8): Metadata Preservation - Enhances US1-US4 (can be integrated throughout)
 - **Polish (Phase 9)**: Depends on all user stories being complete
 
-### User Story Dependencies
+### Boost.Test Development Strategy
 
-- **User Story 1 (P1)**: Must complete first - provides core file transfer infrastructure
-- **User Story 2 (P1)**: Depends on US1 - reuses file transfer mechanisms
-- **User Story 3 (P1)**: Depends on US1 - reuses file transfer + adds modification detection
-- **User Story 4 (P2)**: Depends on US1 and US3 - reuses event system
-- **User Story 5 (P2)**: Depends on US3 - enhances modification handling
-- **User Story 6 (P3)**: Can be integrated throughout US1-US5 - cross-cutting concern
+**Parallel with Implementation (TDD Approach - Recommended)**:
+- Write Boost.Test cases BEFORE implementing feature
+- Verify tests FAIL initially
+- Implement feature
+- Verify tests PASS
 
-### Within Each User Story
+**After Implementation (Validation Approach)**:
+- Implement feature first
+- Write Boost.Test cases for validation
+- Verify tests PASS
 
-**User Story 1 (Initial Sync)**:
-1. Snapshot publisher/subscriber setup (T028-T031) - parallel
-2. Directory scanning (T032-T035) - sequential
-3. FileContent publisher/subscriber (T036-T041) - parallel within pairs
-4. FileChunk publisher/subscriber (T042-T049) - parallel within pairs
+### Parallel Opportunities with Boost.Test
 
-**User Story 2 (File Creation)**:
-1. FileEvent publisher/subscriber setup (T050-T053) - parallel
-2. Creation detection and publishing (T054-T055) - sequential
-3. Event handling (T056-T059) - sequential
+**Within Phase 2 (Boost.Test Migration)**:
+- All three conversions (T027h, T027i, T027j) can run in parallel
 
-**User Story 3 (File Modification)**:
-1. Modification detection (T060-T061) - sequential
-2. Event handling with timestamp logic (T062-T066) - sequential
+**Within Each User Story Phase**:
+- All Boost.Test suite creation tasks marked [P] can run in parallel
+- Boost.Test development can run parallel with listener implementation
+- Different test suites for same story are independent
 
-**User Story 4 (File Deletion)**:
-1. Deletion detection (T067-T068) - sequential
-2. Event handling (T069-T072) - sequential
-
-**User Story 5 (Conflict Resolution)**:
-1. Enhanced timestamp logic (T073-T074) - sequential
-2. Testing and validation (T075-T077) - sequential
-
-**User Story 6 (Metadata Preservation)**:
-1. Metadata validation (T078-T083) - parallel where possible
-2. Logging (T084) - sequential
-
-**Polish Phase**:
-- All test script tasks (T085-T090) - parallel
-- Error handling tasks (T091-T094) - parallel
-- Documentation tasks (T095-T097) - parallel
-- Validation tasks (T098-T104) - sequential
-
-### Parallel Opportunities
-
-**Within Phase 1 (Setup)**:
-- T002, T003, T004, T005, T006 can all run in parallel (different files)
-
-**Within Phase 2 (Foundational)**:
-- T009-T010 (Checksum) parallel with T011-T012 (FileUtils)
-- T016-T019 (TypeSupport registration) - all parallel
-- T020-T023 (Topic creation) - all parallel
-
-**Within User Stories**:
-- DataWriter and DataReader creation tasks within same story
-- Multiple listener implementation files (header vs cpp)
-- Different utility functions
-
-**Cross-Story Parallelization** (if team capacity):
-- After US1 completes, US2 and US4 could potentially be worked on in parallel
-- US6 (metadata) can be integrated while working on other stories
-
----
-
-## Parallel Example: Phase 2 (Foundational)
-
-```bash
-# Launch utility implementations together:
-Task: "Create utility functions for CRC32 checksum calculation in Checksum.h"
-Task: "Implement CRC32 functions in Checksum.cpp"
-Task: "Create utility functions for file I/O operations in FileUtils.h"
-Task: "Implement file I/O utilities in FileUtils.cpp"
-
-# Launch TypeSupport registration together:
-Task: "Register FileEvent TypeSupport in DirShare.cpp"
-Task: "Register FileContent TypeSupport in DirShare.cpp"
-Task: "Register FileChunk TypeSupport in DirShare.cpp"
-Task: "Register DirectorySnapshot TypeSupport in DirShare.cpp"
-
-# Launch Topic creation together:
-Task: "Create FileEvents topic in DirShare.cpp"
-Task: "Create FileContent topic in DirShare.cpp"
-Task: "Create FileChunks topic in DirShare.cpp"
-Task: "Create DirectorySnapshot topic in DirShare.cpp"
-```
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch snapshot publisher/subscriber together:
-Task: "Create DirectorySnapshot DataWriter in DirShare.cpp"
-Task: "Create DirectorySnapshot DataReader with listener in DirShare.cpp"
-
-# Launch FileContent publisher/subscriber together:
-Task: "Create FileContent DataWriter in DirShare.cpp"
-Task: "Create FileContent DataReader with listener in DirShare.cpp"
-
-# Launch FileChunk publisher/subscriber together:
-Task: "Create FileChunk DataWriter in DirShare.cpp"
-Task: "Create FileChunk DataReader with listener in DirShare.cpp"
-```
+**Cross-Story Parallelization**:
+- After US1 completes, US2 and US4 Boost.Test suites could be developed in parallel
+- US6 (metadata) Boost.Test suites can be written while working on other stories
 
 ---
 
@@ -380,77 +408,149 @@ Task: "Create FileChunk DataReader with listener in DirShare.cpp"
 
 **Why US1-3 as MVP**: These three P1 stories provide complete basic file synchronization (initial sync + create + modify). This is the minimum viable product for DirShare.
 
-1. Complete Phase 1: Setup (T001-T006)
-2. Complete Phase 2: Foundational (T007-T027) ⚠️ CRITICAL BLOCKING PHASE
-3. Complete Phase 3: User Story 1 - Initial Directory Sync (T028-T049)
-4. **STOP and VALIDATE**: Test initial sync between two instances
-5. Complete Phase 4: User Story 2 - File Creation (T050-T059)
-6. **STOP and VALIDATE**: Test file creation propagation
-7. Complete Phase 5: User Story 3 - File Modification (T060-T066)
-8. **STOP and VALIDATE**: Test modification propagation with conflict detection
-9. Minimal Phase 9 tasks: T085-T102 (testing)
-10. **MVP READY**: DirShare demonstrates core OpenDDS pub/sub for file synchronization
+1. Complete Phase 1: Setup ✅ DONE
+2. Complete Phase 2: Foundational ✅ DONE
+3. **Complete Phase 2 Boost.Test Migration** (T027h-T027m) - Recommended before US1
+4. Complete Phase 3: User Story 1 - Initial Directory Sync (T028-T061) with Boost.Test
+5. **STOP and VALIDATE**: Run Boost.Test suite, verify all tests pass
+6. Complete Phase 4: User Story 2 - File Creation (T062-T079) with Boost.Test
+7. **STOP and VALIDATE**: Run Boost.Test suite, verify all tests pass
+8. Complete Phase 5: User Story 3 - File Modification (T080-T094) with Boost.Test
+9. **STOP and VALIDATE**: Run Boost.Test suite, verify all tests pass
+10. Minimal Phase 9 tasks: T132-T137, T146-T147, T158-T161 (integration testing)
+11. **MVP READY**: DirShare with comprehensive Boost.Test coverage
 
-### Incremental Delivery
+### Incremental Delivery with Test-First Approach
 
-1. **Foundation (Phases 1-2)**: DDS infrastructure ready
-2. **MVP (Phases 3-5)**: Initial sync + create + modify → Deploy/Demo
-3. **Enhanced (Phase 6)**: Add file deletion → Deploy/Demo
-4. **Robust (Phase 7)**: Improve conflict resolution → Deploy/Demo
-5. **Complete (Phase 8)**: Full metadata preservation → Deploy/Demo
-6. **Production-Ready (Phase 9)**: Polish, testing, documentation → Final Release
+1. **Foundation (Phases 1-2)**: ✅ DONE + Boost.Test migration
+2. **MVP (Phases 3-5)**: Initial sync + create + modify with full Boost.Test coverage → Deploy/Demo
+3. **Enhanced (Phase 6)**: Add file deletion with Boost.Test coverage → Deploy/Demo
+4. **Robust (Phase 7)**: Improve conflict resolution with Boost.Test coverage → Deploy/Demo
+5. **Complete (Phase 8)**: Full metadata preservation with Boost.Test coverage → Deploy/Demo
+6. **Production-Ready (Phase 9)**: Polish, integration testing, documentation → Final Release
 
-### Sequential Development (Recommended for OpenDDS Example)
+---
 
-Given the interdependencies in DirShare:
+## Boost.Test Integration Details
 
-1. Phase 1: Setup → Foundation for everything
-2. Phase 2: Foundational → MUST complete before ANY user stories
-3. Phase 3: US1 (Initial Sync) → MUST complete before other stories (provides file transfer)
-4. Phase 4: US2 (File Creation) → Builds on US1
-5. Phase 5: US3 (File Modification) → Builds on US1
-6. Phase 6: US4 (File Deletion) → Builds on US1 and US3
-7. Phase 7: US5 (Conflict Resolution) → Enhances US3
-8. Phase 8: US6 (Metadata) → Enhances all previous stories
-9. Phase 9: Polish → Final validation
+### Test Framework Setup
 
-**Rationale**: Unlike web applications where user stories might be independent, DirShare's user stories build on shared DDS infrastructure, making sequential development more natural.
+All new unit tests **MUST** use Boost.Test framework:
+
+```cpp
+#define BOOST_TEST_MODULE [ModuleName]
+#include <boost/test/included/unit_test.hpp>
+
+BOOST_AUTO_TEST_SUITE([SuiteName])
+
+BOOST_AUTO_TEST_CASE(test_case_name)
+{
+    // Test implementation
+    BOOST_CHECK_EQUAL(actual, expected);
+    BOOST_REQUIRE(condition);
+    BOOST_CHECK_THROW(expression, exception_type);
+    BOOST_CHECK_NO_THROW(expression);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+```
+
+### MPC Configuration for Boost.Test
+
+Each Boost.Test suite requires MPC project configuration:
+
+```mpc
+project(*[TestName]BoostTest): aceexe, dcps, boost_base {
+  exename = [TestName]BoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  Source_Files {
+    [TestName]BoostTest.cpp
+  }
+
+  // Boost.Test specific
+  macros += BOOST_TEST_DYN_LINK
+}
+```
+
+### Test Coverage Requirements
+
+Each new component **MUST** have:
+- **Unit Tests**: Test individual functions/methods in isolation using Boost.Test
+- **Integration Tests**: Test component interactions with DDS using Perl scripts
+- **Edge Case Tests**: Test error conditions, boundaries, invalid inputs using Boost.Test
+- **Fixture-Based Tests**: Use Boost.Test fixtures for setup/teardown
+
+### Test Execution
+
+```bash
+# Build all tests
+cd DevGuideExamples/DCPS/DirShare/tests
+mwc.pl -type gnuace tests.mpc && make
+
+# Run individual Boost.Test suite with detailed output
+./ChecksumBoostTest --log_level=all --report_level=detailed
+
+# Run with specific test case
+./FileUtilsBoostTest --run_test=write_read_file --log_level=all
+
+# Run all Boost.Test suites
+./BoostTestRunner
+
+# Run legacy custom framework tests
+./run_tests.pl
+
+# Run integration tests
+cd ..
+perl run_test.pl
+perl run_test.pl --rtps
+```
 
 ---
 
 ## Task Summary
 
-**Total Tasks**: 104
+**Total Tasks**: 163 (up from 104 - 59 new Boost.Test tasks added)
+
 **Tasks by Phase**:
-- Phase 1 (Setup): 6 tasks
-- Phase 2 (Foundational): 21 tasks (BLOCKING)
-- Phase 3 (US1 - Initial Sync): 22 tasks
-- Phase 4 (US2 - File Creation): 10 tasks
-- Phase 5 (US3 - File Modification): 7 tasks
-- Phase 6 (US4 - File Deletion): 6 tasks
-- Phase 7 (US5 - Conflict Resolution): 5 tasks
-- Phase 8 (US6 - Metadata Preservation): 7 tasks
-- Phase 9 (Polish): 20 tasks
+- Phase 1 (Setup): 6 tasks ✅ COMPLETE
+- Phase 2 (Foundational): 21 tasks ✅ COMPLETE
+- Phase 2 Boost.Test Migration: 6 tasks 🎯 NEW
+- Phase 3 (US1 - Initial Sync): 34 tasks (22 impl + 12 Boost.Test)
+- Phase 4 (US2 - File Creation): 18 tasks (10 impl + 8 Boost.Test)
+- Phase 5 (US3 - File Modification): 15 tasks (7 impl + 8 Boost.Test)
+- Phase 6 (US4 - File Deletion): 13 tasks (6 impl + 7 Boost.Test)
+- Phase 7 (US5 - Conflict Resolution): 11 tasks (5 impl + 6 Boost.Test)
+- Phase 8 (US6 - Metadata Preservation): 13 tasks (7 impl + 6 Boost.Test)
+- Phase 9 (Polish): 32 tasks (20 app polish + 8 Boost.Test suites + 4 validation)
 
-**Tasks by User Story**:
-- US1 (P1): 22 tasks (Initial Directory Synchronization)
-- US2 (P1): 10 tasks (File Creation Propagation)
-- US3 (P1): 7 tasks (File Modification Propagation)
-- US4 (P2): 6 tasks (File Deletion Propagation)
-- US5 (P2): 5 tasks (Conflict Resolution)
-- US6 (P3): 7 tasks (Metadata Preservation)
+**Boost.Test Tasks Summary**:
+- Phase 2 Migration: 6 tasks
+- User Story 1: 12 Boost.Test tasks
+- User Story 2: 8 Boost.Test tasks
+- User Story 3: 8 Boost.Test tasks
+- User Story 4: 7 Boost.Test tasks
+- User Story 5: 6 Boost.Test tasks
+- User Story 6: 6 Boost.Test tasks
+- Phase 9 Additional: 8 Boost.Test tasks
+- **Total Boost.Test Tasks: 61** 🎯
 
-**Parallel Opportunities Identified**:
-- Phase 1: 5 tasks can run in parallel
-- Phase 2: 12 tasks can run in parallel (after initial setup)
-- Each user story: 4-8 tasks can run in parallel (DataWriter/DataReader pairs, utilities)
-- Phase 9: 10 tasks can run in parallel (documentation, tests)
+**Test Coverage Goals**:
+- 100% of utility functions covered by Boost.Test unit tests
+- 100% of DDS listeners covered by Boost.Test unit tests
+- 100% of FileMonitor functionality covered by Boost.Test unit tests
+- All edge cases and error conditions covered by Boost.Test
+- Integration tests cover end-to-end scenarios
 
-**Suggested MVP Scope**:
-- Phases 1-5 (Setup + Foundational + US1 + US2 + US3)
-- Total MVP tasks: 66 out of 104 (63%)
-- Provides: Initial sync, file creation, file modification with conflict detection
-- OpenDDS constitution compliant: IDL-first, dual discovery, complete lifecycle
+**Suggested MVP Scope with Boost.Test**:
+- Phases 1-2 (✅ DONE) + Phase 2 Boost.Test Migration (6 tasks)
+- Phases 3-5 (US1 + US2 + US3: 67 tasks, including 28 Boost.Test tasks)
+- Minimal Phase 9 (integration testing + validation: ~15 tasks)
+- **Total MVP: ~88 tasks** with comprehensive Boost.Test coverage
+- Provides: Initial sync, file creation, file modification with full unit test coverage
 
 ---
 
@@ -459,9 +559,12 @@ Given the interdependencies in DirShare:
 - All tasks follow OpenDDS constitution principles (IDL-first, dual discovery, proper lifecycle)
 - [P] tasks = different files, no dependencies within phase
 - [Story] labels map tasks to user stories for traceability
-- File paths are absolute from repository root
+- **🎯 Boost.Test is mandatory for all new unit tests** (as requested)
+- Use Boost.Test fixtures for common setup/teardown patterns
 - Verify DDS return codes (RETCODE_OK) for all operations
-- Use ACE logging macros (ACE_ERROR, ACE_DEBUG) consistently
+- Use ACE logging macros (ACE_DEBUG, ACE_ERROR) consistently
 - Test both InfoRepo and RTPS modes per constitution requirement
-- Commit after each logical task group (e.g., listener implementation, topic creation)
-- Stop at checkpoints to validate independently before proceeding
+- Commit after each logical task group (e.g., listener implementation + tests)
+- Stop at checkpoints to run Boost.Test suite before proceeding
+- Boost.Test test cases should follow naming convention: `test_[component]_[scenario]`
+- All Boost.Test suites should have both positive and negative test cases

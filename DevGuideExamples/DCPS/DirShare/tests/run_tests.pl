@@ -47,10 +47,21 @@ unless (-f "./ChecksumTest" || -f "./ChecksumTest.exe") {
     exit 1;
 }
 
-# Run all tests
+# Run original custom framework tests
+print "${YELLOW}--- Custom Test Framework ---${NC}\n\n";
 $status |= run_test("ChecksumTest", "ChecksumTest");
 $status |= run_test("FileUtilsTest", "FileUtilsTest");
 $status |= run_test("FileMonitorTest", "FileMonitorTest");
+
+# Run Boost.Test suites (if built)
+if (-f "./ChecksumBoostTest" || -f "./ChecksumBoostTest.exe") {
+    print "\n${YELLOW}--- Boost.Test Framework ---${NC}\n\n";
+    $status |= run_test("ChecksumBoostTest", "ChecksumBoostTest");
+    $status |= run_test("FileUtilsBoostTest", "FileUtilsBoostTest");
+    $status |= run_test("FileMonitorBoostTest", "FileMonitorBoostTest");
+} else {
+    print "\n${YELLOW}Note: Boost.Test suites not built. Run 'make' to build them.${NC}\n\n";
+}
 
 # Summary
 print "╔══════════════════════════════════════════════╗\n";

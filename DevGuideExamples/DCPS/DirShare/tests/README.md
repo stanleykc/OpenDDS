@@ -58,25 +58,52 @@ make
 
 ### Expected Build Artifacts
 
-Three test executables will be created:
+**Custom Framework Tests:**
 - `ChecksumTest`
 - `FileUtilsTest`
 - `FileMonitorTest`
 
+**Boost.Test Framework Tests:**
+- `ChecksumBoostTest`
+- `FileUtilsBoostTest`
+- `FileMonitorBoostTest`
+
 ## Running Tests
 
-### Run all tests:
+### Run all tests (both frameworks):
 
 ```bash
 ./run_tests.pl
 ```
 
-### Run individual tests:
+This script runs both the custom framework tests and Boost.Test suites automatically.
+
+### Run individual custom framework tests:
 
 ```bash
 ./ChecksumTest
 ./FileUtilsTest
 ./FileMonitorTest
+```
+
+### Run individual Boost.Test suites:
+
+```bash
+# Basic execution
+./ChecksumBoostTest
+./FileUtilsBoostTest
+./FileMonitorBoostTest
+
+# With detailed logging
+./ChecksumBoostTest --log_level=all
+./FileUtilsBoostTest --log_level=all --report_level=detailed
+./FileMonitorBoostTest --log_level=all
+
+# Run specific test case
+./ChecksumBoostTest --run_test=test_crc32_known_value --log_level=all
+
+# Show available tests
+./ChecksumBoostTest --list_content
 ```
 
 ## Test Output
@@ -106,6 +133,63 @@ Running test: crc32_known_value
 ✓ ChecksumTest PASSED
 ```
 
+## Boost.Test Framework
+
+### Why Boost.Test?
+
+The project includes both custom framework tests (original) and Boost.Test suites (Phase 2 Migration):
+
+**Advantages of Boost.Test:**
+- Industry-standard testing framework
+- Rich assertion macros (`BOOST_CHECK`, `BOOST_REQUIRE`, `BOOST_CHECK_EQUAL`)
+- Detailed test reporting and logging
+- Test fixtures for setup/teardown
+- Can run specific tests or suites
+- Better integration with IDEs and CI/CD tools
+
+### Boost.Test Features Used
+
+**Test Suites:**
+```cpp
+BOOST_AUTO_TEST_SUITE(ChecksumTestSuite)
+BOOST_AUTO_TEST_CASE(test_crc32_empty_data) { ... }
+BOOST_AUTO_TEST_SUITE_END()
+```
+
+**Assertions:**
+- `BOOST_CHECK(condition)` - Check condition, continue on failure
+- `BOOST_REQUIRE(condition)` - Check condition, abort test on failure
+- `BOOST_CHECK_EQUAL(actual, expected)` - Check equality with detailed output
+- `BOOST_CHECK_NO_THROW(expression)` - Verify no exception thrown
+
+**Test Fixtures:**
+```cpp
+struct FileMonitorTestFixture {
+  void cleanup_directory(const char* dir) { ... }
+};
+BOOST_FIXTURE_TEST_SUITE(FileMonitorTestSuite, FileMonitorTestFixture)
+```
+
+### Boost.Test Command-Line Options
+
+- `--log_level=all` - Show all log messages
+- `--report_level=detailed` - Detailed test report
+- `--run_test=test_name` - Run specific test case
+- `--list_content` - List all tests in the suite
+- `--help` - Show all options
+
+### Boost.Test Example Output
+
+```
+Running 8 test cases...
+test_crc32_empty_data: OK
+test_crc32_known_value: OK
+test_crc32_incremental: OK
+...
+
+*** No errors detected
+```
+
 ## Test Philosophy
 
 These unit tests validate the Phase 2 foundational components in isolation before they are integrated into the full DirShare application. This approach:
@@ -114,6 +198,7 @@ These unit tests validate the Phase 2 foundational components in isolation befor
 2. **Documents behavior**: Tests serve as executable specifications
 3. **Enables refactoring**: Changes can be made with confidence
 4. **Simplifies debugging**: Failures are isolated to specific components
+5. **Framework flexibility**: Both custom and Boost.Test frameworks provide complementary benefits
 
 ## CI/CD Integration
 

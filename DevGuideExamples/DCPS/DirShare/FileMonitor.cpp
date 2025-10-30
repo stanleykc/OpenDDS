@@ -139,13 +139,19 @@ bool FileMonitor::get_file_metadata(const std::string& filename, FileMetadata& m
     return false;
   }
 
-  if (!get_modification_time(full_path, metadata.timestamp_sec, metadata.timestamp_nsec)) {
+  unsigned long long timestamp_sec;
+  unsigned long timestamp_nsec;
+  if (!get_modification_time(full_path, timestamp_sec, timestamp_nsec)) {
     return false;
   }
+  metadata.timestamp_sec = timestamp_sec;
+  metadata.timestamp_nsec = static_cast<CORBA::ULong>(timestamp_nsec);
 
-  if (!calculate_file_checksum(full_path, metadata.checksum)) {
+  unsigned long checksum;
+  if (!calculate_file_checksum(full_path, checksum)) {
     return false;
   }
+  metadata.checksum = static_cast<CORBA::ULong>(checksum);
 
   return true;
 }
