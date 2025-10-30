@@ -2,6 +2,7 @@
 #define DIRSHARE_CHECKSUM_H
 
 #include <cstddef>
+#include <stdint.h>
 
 namespace DirShare {
 
@@ -44,6 +45,16 @@ unsigned long finalize_crc32(unsigned long crc);
  * @return true if successful, false on error (file not found, read error)
  */
 bool calculate_file_crc32(const char* file_path, unsigned long& checksum);
+
+/**
+ * Convenience wrapper: Compute checksum for buffer
+ * @param data Pointer to data buffer (as uint8_t*)
+ * @param length Length of data in bytes
+ * @return CRC32 checksum (32-bit as uint32_t)
+ */
+inline uint32_t compute_checksum(const uint8_t* data, size_t length) {
+  return static_cast<uint32_t>(calculate_crc32(data, length));
+}
 
 } // namespace DirShare
 

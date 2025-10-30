@@ -37,7 +37,7 @@ sub run_test {
 
 print "\n";
 print "╔══════════════════════════════════════════════╗\n";
-print "║   DirShare Phase 2 Component Unit Tests     ║\n";
+print "║   DirShare Component Unit Tests              ║\n";
 print "╔══════════════════════════════════════════════╗\n";
 print "\n";
 
@@ -47,10 +47,19 @@ unless (-f "./ChecksumBoostTest" || -f "./ChecksumBoostTest.exe") {
     exit 1;
 }
 
-# Run Boost.Test suites
+print "${YELLOW}--- Phase 2: Foundation Tests ---${NC}\n\n";
+
+# Run Phase 2 Boost.Test suites
 $status |= run_test("ChecksumBoostTest", "ChecksumBoostTest");
 $status |= run_test("FileUtilsBoostTest", "FileUtilsBoostTest");
 $status |= run_test("FileMonitorBoostTest", "FileMonitorBoostTest");
+
+print "${YELLOW}--- Phase 3: User Story 1 (Initial Sync) Tests ---${NC}\n\n";
+
+# Run Phase 3 Boost.Test suites (US1 - Initial Directory Synchronization)
+$status |= run_test("DirectorySnapshotBoostTest", "DirectorySnapshotBoostTest");
+$status |= run_test("FileContentBoostTest", "FileContentBoostTest");
+$status |= run_test("FileChunkBoostTest", "FileChunkBoostTest");
 
 # Summary
 print "╔══════════════════════════════════════════════╗\n";

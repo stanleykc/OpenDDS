@@ -2,6 +2,9 @@
 #include "FileMonitor.h"
 #include "FileUtils.h"
 #include "Checksum.h"
+#include "SnapshotListenerImpl.h"
+#include "FileContentListenerImpl.h"
+#include "FileChunkListenerImpl.h"
 
 #include <dds/DCPS/Marked_Default_Qos.h>
 #include <dds/DCPS/Service_Participant.h>
@@ -11,6 +14,8 @@
 #include <ace/Log_Msg.h>
 #include <ace/OS_NS_unistd.h>
 #include <ace/Get_Opt.h>
+#include <ace/UUID.h>
+#include <ace/Time_Value.h>
 
 #if OPENDDS_DO_MANUAL_STATIC_INCLUDES
 #  include <dds/DCPS/RTPS/RtpsDiscovery.h>
@@ -273,21 +278,266 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                ACE_TEXT("  Topics created: FileEvents, FileContent, FileChunks, DirectorySnapshot\n"),
                DEFAULT_DOMAIN_ID));
 
-    // TODO: Phase 3+ implementation will add:
-    // - FileMonitor instantiation and periodic scanning
-    // - DataWriter/DataReader creation for each topic
-    // - Listener implementations for receiving remote changes
-    // - Initial directory snapshot publishing
-    // - Main event loop for file monitoring
+    // Create DataWriters for publishing
+    DDS::DataWriter_var snapshot_writer =
+      publisher->create_datawriter(topic_snapshot,
+                                   DATAWRITER_QOS_DEFAULT,
+                                   0,
+                                   OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!snapshot_writer) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datawriter DirectorySnapshot failed!\n")),
+                      1);
+    }
+
+    DDS::DataWriter_var content_writer =
+      publisher->create_datawriter(topic_content,
+                                   DATAWRITER_QOS_DEFAULT,
+                                   0,
+                                   OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!content_writer) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datawriter FileContent failed!\n")),
+                      1);
+    }
+
+    DDS::DataWriter_var chunk_writer =
+      publisher->create_datawriter(topic_chunks,
+                                   DATAWRITER_QOS_DEFAULT,
+                                   0,
+                                   OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!chunk_writer) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datawriter FileChunk failed!\n")),
+                      1);
+    }
+
+    // Narrow to typed writers
+    DirShare::DirectorySnapshotDataWriter_var typed_snapshot_writer =
+      DirShare::DirectorySnapshotDataWriter::_narrow(snapshot_writer);
+    DirShare::FileContentDataWriter_var typed_content_writer =
+      DirShare::FileContentDataWriter::_narrow(content_writer);
+    DirShare::FileChunkDataWriter_var typed_chunk_writer =
+      DirShare::FileChunkDataWriter::_narrow(chunk_writer);
+
+    // Create listeners for receiving data
+    DDS::DataReaderListener_var snapshot_listener =
+      new DirShare::SnapshotListenerImpl(g_shared_directory, content_writer, chunk_writer);
+    DDS::DataReaderListener_var content_listener =
+      new DirShare::FileContentListenerImpl(g_shared_directory);
+    DDS::DataReaderListener_var chunk_listener =
+      new DirShare::FileChunkListenerImpl(g_shared_directory);
+
+    // Create DataReaders with listeners
+    DDS::DataReader_var snapshot_reader =
+      subscriber->create_datareader(topic_snapshot,
+                                    DATAREADER_QOS_DEFAULT,
+                                    snapshot_listener,
+                                    OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!snapshot_reader) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datareader DirectorySnapshot failed!\n")),
+                      1);
+    }
+
+    DDS::DataReader_var content_reader =
+      subscriber->create_datareader(topic_content,
+                                    DATAREADER_QOS_DEFAULT,
+                                    content_listener,
+                                    OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!content_reader) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datareader FileContent failed!\n")),
+                      1);
+    }
+
+    DDS::DataReader_var chunk_reader =
+      subscriber->create_datareader(topic_chunks,
+                                    DATAREADER_QOS_DEFAULT,
+                                    chunk_listener,
+                                    OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!chunk_reader) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datareader FileChunk failed!\n")),
+                      1);
+    }
+
+    // Wait for discovery - wait for publication/subscription matching
+    ACE_DEBUG((LM_INFO,
+               ACE_TEXT("(%P|%t) Waiting for participant discovery...\n")));
+
+    DDS::Duration_t timeout = {30, 0}; // 30 second timeout
+    DDS::ConditionSeq conditions;
+    DDS::ReturnCode_t ret = ws->wait(conditions, timeout);
+
+    if (ret == DDS::RETCODE_TIMEOUT) {
+      ACE_DEBUG((LM_INFO,
+                 ACE_TEXT("(%P|%t) No other participants discovered yet, continuing...\n")));
+    } else if (ret != DDS::RETCODE_OK) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: WaitSet wait failed: %d\n"),
+                       ret),
+                      1);
+    }
+
+    // Create FileMonitor for directory scanning
+    DirShare::FileMonitor monitor(g_shared_directory);
+
+    // Generate and publish initial directory snapshot
+    ACE_DEBUG((LM_INFO,
+               ACE_TEXT("(%P|%t) Publishing initial directory snapshot...\n")));
+
+    DirShare::DirectorySnapshot snapshot;
+
+    // Generate unique participant ID using UUID
+    ACE_Utils::UUID uuid;
+    ACE_Utils::UUID_GENERATOR::instance()->generate_UUID(uuid);
+    snapshot.participant_id = uuid.to_string()->c_str();
+
+    // Get all files in directory
+    std::vector<DirShare::FileMetadata> file_list = monitor.get_all_files();
+    snapshot.files.length(static_cast<CORBA::ULong>(file_list.size()));
+    for (size_t i = 0; i < file_list.size(); ++i) {
+      snapshot.files[static_cast<CORBA::ULong>(i)] = file_list[i];
+    }
+
+    // Set timestamp
+    ACE_Time_Value now = ACE_OS::gettimeofday();
+    snapshot.snapshot_time_sec = static_cast<CORBA::ULongLong>(now.sec());
+    snapshot.snapshot_time_nsec = static_cast<CORBA::ULong>(now.usec() * 1000);
+    snapshot.file_count = static_cast<CORBA::ULong>(file_list.size());
+
+    // Publish snapshot
+    ret = typed_snapshot_writer->write(snapshot, DDS::HANDLE_NIL);
+    if (ret != DDS::RETCODE_OK) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: write DirectorySnapshot failed: %d\n"),
+                       ret),
+                      1);
+    }
 
     ACE_DEBUG((LM_INFO,
-               ACE_TEXT("(%P|%t) DirShare running. Press Ctrl+C to exit.\n")));
+               ACE_TEXT("(%P|%t) Initial snapshot published: %u files\n"),
+               snapshot.file_count));
 
-    // Temporary: Keep application running until Ctrl+C
-    // In later phases, this will be replaced with file monitoring loop
+    // Publish initial file contents
+    for (size_t i = 0; i < file_list.size(); ++i) {
+      const DirShare::FileMetadata& metadata = file_list[i];
+      std::string filename = metadata.filename.in();
+      std::string full_path = g_shared_directory + "/" + filename;
+
+      // Determine if file should be sent as chunks or content
+      const uint64_t CHUNK_THRESHOLD = 10 * 1024 * 1024; // 10MB
+
+      if (metadata.size < CHUNK_THRESHOLD) {
+        // Send as FileContent (small file)
+        DirShare::FileContent content;
+        content.filename = metadata.filename;
+        content.size = metadata.size;
+        content.checksum = metadata.checksum;
+        content.timestamp_sec = metadata.timestamp_sec;
+        content.timestamp_nsec = metadata.timestamp_nsec;
+
+        // Read file data
+        std::vector<uint8_t> data;
+        if (!DirShare::read_file(full_path, data)) {
+          ACE_ERROR((LM_ERROR,
+                     ACE_TEXT("ERROR: %N:%l: Failed to read file: %C\n"),
+                     full_path.c_str()));
+          continue;
+        }
+
+        content.data.length(static_cast<CORBA::ULong>(data.size()));
+        std::memcpy(content.data.get_buffer(), &data[0], data.size());
+
+        ret = typed_content_writer->write(content, DDS::HANDLE_NIL);
+        if (ret != DDS::RETCODE_OK) {
+          ACE_ERROR((LM_ERROR,
+                     ACE_TEXT("ERROR: %N:%l: write FileContent failed: %d\n"),
+                     ret));
+        } else {
+          ACE_DEBUG((LM_INFO,
+                     ACE_TEXT("(%P|%t) Published FileContent: %C (%Q bytes)\n"),
+                     filename.c_str(),
+                     metadata.size));
+        }
+      } else {
+        // Send as FileChunks (large file)
+        const uint32_t CHUNK_SIZE = 1024 * 1024; // 1MB
+        uint32_t total_chunks = static_cast<uint32_t>((metadata.size + CHUNK_SIZE - 1) / CHUNK_SIZE);
+
+        ACE_DEBUG((LM_INFO,
+                   ACE_TEXT("(%P|%t) Publishing FileChunks for: %C (%Q bytes, %u chunks)\n"),
+                   filename.c_str(),
+                   metadata.size,
+                   total_chunks));
+
+        // Read entire file
+        std::vector<uint8_t> file_data;
+        if (!DirShare::read_file(full_path, file_data)) {
+          ACE_ERROR((LM_ERROR,
+                     ACE_TEXT("ERROR: %N:%l: Failed to read file: %C\n"),
+                     full_path.c_str()));
+          continue;
+        }
+
+        // Send chunks
+        for (uint32_t chunk_id = 0; chunk_id < total_chunks; ++chunk_id) {
+          DirShare::FileChunk chunk;
+          chunk.filename = metadata.filename;
+          chunk.chunk_id = chunk_id;
+          chunk.total_chunks = total_chunks;
+          chunk.file_size = metadata.size;
+          chunk.file_checksum = metadata.checksum;
+          chunk.timestamp_sec = metadata.timestamp_sec;
+          chunk.timestamp_nsec = metadata.timestamp_nsec;
+
+          // Calculate chunk data
+          uint64_t offset = static_cast<uint64_t>(chunk_id) * CHUNK_SIZE;
+          uint32_t this_chunk_size = static_cast<uint32_t>(
+            (offset + CHUNK_SIZE > metadata.size) ?
+            (metadata.size - offset) : CHUNK_SIZE);
+
+          chunk.data.length(this_chunk_size);
+          std::memcpy(chunk.data.get_buffer(), &file_data[offset], this_chunk_size);
+
+          // Calculate chunk checksum
+          chunk.chunk_checksum = DirShare::compute_checksum(
+            &file_data[offset], this_chunk_size);
+
+          ret = typed_chunk_writer->write(chunk, DDS::HANDLE_NIL);
+          if (ret != DDS::RETCODE_OK) {
+            ACE_ERROR((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: write FileChunk failed: %d\n"),
+                       ret));
+            break;
+          }
+        }
+
+        ACE_DEBUG((LM_INFO,
+                   ACE_TEXT("(%P|%t) Completed publishing chunks for: %C\n"),
+                   filename.c_str()));
+      }
+    }
+
+    ACE_DEBUG((LM_INFO,
+               ACE_TEXT("(%P|%t) DirShare running. Monitoring: %C\n")
+               ACE_TEXT("  Press Ctrl+C to exit.\n"),
+               g_shared_directory.c_str()));
+
+    // Main monitoring loop
+    // Note: File change detection (CREATE/MODIFY/DELETE) will be implemented in Phase 4-6
     while (true) {
       ACE_OS::sleep(POLL_INTERVAL_SEC);
-      // File monitoring will happen here in Phase 3+
+
+      // Phase 3: Initial sync only - monitoring loop placeholder
+      // Phase 4+ will add: scan_for_changes() and FileEvent publishing
     }
 
     // Cleanup (will be reached via signal handler or when loop exits)

@@ -115,43 +115,43 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 1
 
-- [ ] T028 [P] [US1] Create DirectorySnapshot DataWriter in `DirShare.cpp` with QoS policies
-- [ ] T029 [P] [US1] Create DirectorySnapshot DataReader with listener in `DirShare.cpp`
-- [ ] T030 [US1] Implement DirectorySnapshot listener interface in `DevGuideExamples/DCPS/DirShare/SnapshotListenerImpl.h`
-- [ ] T031 [US1] Implement DirectorySnapshot listener on_data_available in `DevGuideExamples/DCPS/DirShare/SnapshotListenerImpl.cpp`
-- [ ] T032 [US1] Add directory scanning function to FileMonitor to generate list of FileMetadata for all local files
-- [ ] T033 [US1] Implement publish DirectorySnapshot on startup in `DirShare.cpp` (scan local directory, publish to topic)
-- [ ] T034 [US1] Implement snapshot comparison logic in SnapshotListenerImpl to detect missing files
-- [ ] T035 [US1] Add file request handling when missing files detected (trigger file transfer)
-- [ ] T036 [P] [US1] Create FileContent DataWriter in `DirShare.cpp` for small file transfers
-- [ ] T037 [P] [US1] Create FileContent DataReader with listener in `DirShare.cpp`
-- [ ] T038 [US1] Implement FileContent listener interface in `DevGuideExamples/DCPS/DirShare/FileContentListenerImpl.h`
-- [ ] T039 [US1] Implement FileContent listener on_data_available in `DevGuideExamples/DCPS/DirShare/FileContentListenerImpl.cpp` with checksum verification
-- [ ] T040 [US1] Add small file publishing logic (<10MB threshold) to DirShare.cpp when requested
-- [ ] T041 [US1] Add timestamp preservation when writing received files in FileContentListenerImpl
-- [ ] T042 [P] [US1] Create FileChunk DataWriter in `DirShare.cpp` for large file transfers
-- [ ] T043 [P] [US1] Create FileChunk DataReader with listener in `DirShare.cpp`
-- [ ] T044 [US1] Implement FileChunk listener interface in `DevGuideExamples/DCPS/DirShare/FileChunkListenerImpl.h`
-- [ ] T045 [US1] Implement chunk reassembly logic in `DevGuideExamples/DCPS/DirShare/FileChunkListenerImpl.cpp` with buffer management
-- [ ] T046 [US1] Add chunk publishing logic (1MB chunks) to DirShare.cpp for files >=10MB
-- [ ] T047 [US1] Add file checksum verification after reassembly in FileChunkListenerImpl
-- [ ] T048 [US1] Add error handling for checksum mismatches in all listeners
-- [ ] T049 [US1] Add ACE logging for initial synchronization events (snapshot sent/received, files transferred)
+- [X] T028 [P] [US1] Create DirectorySnapshot DataWriter in `DirShare.cpp` with QoS policies
+- [X] T029 [P] [US1] Create DirectorySnapshot DataReader with listener in `DirShare.cpp`
+- [X] T030 [US1] Implement DirectorySnapshot listener interface in `DevGuideExamples/DCPS/DirShare/SnapshotListenerImpl.h`
+- [X] T031 [US1] Implement DirectorySnapshot listener on_data_available in `DevGuideExamples/DCPS/DirShare/SnapshotListenerImpl.cpp`
+- [X] T032 [US1] Add directory scanning function to FileMonitor to generate list of FileMetadata for all local files
+- [X] T033 [US1] Implement publish DirectorySnapshot on startup in `DirShare.cpp` (scan local directory, publish to topic)
+- [X] T034 [US1] Implement snapshot comparison logic in SnapshotListenerImpl to detect missing files
+- [X] T035 [US1] Add file request handling when missing files detected (trigger file transfer)
+- [X] T036 [P] [US1] Create FileContent DataWriter in `DirShare.cpp` for small file transfers
+- [X] T037 [P] [US1] Create FileContent DataReader with listener in `DirShare.cpp`
+- [X] T038 [US1] Implement FileContent listener interface in `DevGuideExamples/DCPS/DirShare/FileContentListenerImpl.h`
+- [X] T039 [US1] Implement FileContent listener on_data_available in `DevGuideExamples/DCPS/DirShare/FileContentListenerImpl.cpp` with checksum verification
+- [X] T040 [US1] Add small file publishing logic (<10MB threshold) to DirShare.cpp when requested
+- [X] T041 [US1] Add timestamp preservation when writing received files in FileContentListenerImpl
+- [X] T042 [P] [US1] Create FileChunk DataWriter in `DirShare.cpp` for large file transfers
+- [X] T043 [P] [US1] Create FileChunk DataReader with listener in `DirShare.cpp`
+- [X] T044 [US1] Implement FileChunk listener interface in `DevGuideExamples/DCPS/DirShare/FileChunkListenerImpl.h`
+- [X] T045 [US1] Implement chunk reassembly logic in `DevGuideExamples/DCPS/DirShare/FileChunkListenerImpl.cpp` with buffer management
+- [X] T046 [US1] Add chunk publishing logic (1MB chunks) to DirShare.cpp for files >=10MB
+- [X] T047 [US1] Add file checksum verification after reassembly in FileChunkListenerImpl
+- [X] T048 [US1] Add error handling for checksum mismatches in all listeners
+- [X] T049 [US1] Add ACE logging for initial synchronization events (snapshot sent/received, files transferred)
 
 ### Boost.Test Unit Tests for User Story 1 🎯 NEW
 
-- [ ] T050 [P] [US1] Create Boost.Test suite for DirectorySnapshot logic in `tests/DirectorySnapshotBoostTest.cpp`
-- [ ] T051 [P] [US1] Add Boost.Test cases for snapshot comparison (missing files, existing files, identical files) in `tests/DirectorySnapshotBoostTest.cpp`
-- [ ] T052 [P] [US1] Create Boost.Test suite for FileContent transfer in `tests/FileContentBoostTest.cpp`
-- [ ] T053 [P] [US1] Add Boost.Test cases for small file transfer (<10MB) in `tests/FileContentBoostTest.cpp`
-- [ ] T054 [P] [US1] Add Boost.Test cases for checksum verification in `tests/FileContentBoostTest.cpp`
-- [ ] T055 [P] [US1] Add Boost.Test cases for timestamp preservation in `tests/FileContentBoostTest.cpp`
-- [ ] T056 [P] [US1] Create Boost.Test suite for FileChunk chunking logic in `tests/FileChunkBoostTest.cpp`
-- [ ] T057 [P] [US1] Add Boost.Test cases for chunk calculation (10MB threshold, 1MB chunks) in `tests/FileChunkBoostTest.cpp`
-- [ ] T058 [P] [US1] Add Boost.Test cases for chunk reassembly (in-order, out-of-order) in `tests/FileChunkBoostTest.cpp`
-- [ ] T059 [P] [US1] Add Boost.Test cases for chunk checksum verification in `tests/FileChunkBoostTest.cpp`
-- [ ] T060 [P] [US1] Add Boost.Test cases for file checksum after reassembly in `tests/FileChunkBoostTest.cpp`
-- [ ] T061 [US1] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+- [X] T050 [P] [US1] Create Boost.Test suite for DirectorySnapshot logic in `tests/DirectorySnapshotBoostTest.cpp`
+- [X] T051 [P] [US1] Add Boost.Test cases for snapshot comparison (missing files, existing files, identical files) in `tests/DirectorySnapshotBoostTest.cpp`
+- [X] T052 [P] [US1] Create Boost.Test suite for FileContent transfer in `tests/FileContentBoostTest.cpp`
+- [X] T053 [P] [US1] Add Boost.Test cases for small file transfer (<10MB) in `tests/FileContentBoostTest.cpp`
+- [X] T054 [P] [US1] Add Boost.Test cases for checksum verification in `tests/FileContentBoostTest.cpp`
+- [X] T055 [P] [US1] Add Boost.Test cases for timestamp preservation in `tests/FileContentBoostTest.cpp`
+- [X] T056 [P] [US1] Create Boost.Test suite for FileChunk chunking logic in `tests/FileChunkBoostTest.cpp`
+- [X] T057 [P] [US1] Add Boost.Test cases for chunk calculation (10MB threshold, 1MB chunks) in `tests/FileChunkBoostTest.cpp`
+- [X] T058 [P] [US1] Add Boost.Test cases for chunk reassembly (in-order, out-of-order) in `tests/FileChunkBoostTest.cpp`
+- [X] T059 [P] [US1] Add Boost.Test cases for chunk checksum verification in `tests/FileChunkBoostTest.cpp`
+- [X] T060 [P] [US1] Add Boost.Test cases for file checksum after reassembly in `tests/FileChunkBoostTest.cpp`
+- [X] T061 [US1] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
 
 **Checkpoint**: Initial directory synchronization complete with comprehensive Boost.Test coverage
 

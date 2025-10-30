@@ -22,12 +22,18 @@ project(*lib): dcpslib, dcps_tcp, dcps_rtps_udp {
     FileMonitor.cpp
     Checksum.cpp
     FileUtils.cpp
+    SnapshotListenerImpl.cpp
+    FileContentListenerImpl.cpp
+    FileChunkListenerImpl.cpp
   }
 
   Header_Files {
     FileMonitor.h
     Checksum.h
     FileUtils.h
+    SnapshotListenerImpl.h
+    FileContentListenerImpl.h
+    FileChunkListenerImpl.h
   }
 }
 
