@@ -6,14 +6,16 @@
 
 namespace DirShare {
 
-FileMonitor::FileMonitor(const std::string& directory_path)
+FileMonitor::FileMonitor(const std::string& directory_path, bool fail_silently)
   : directory_path_(directory_path)
 {
   // Verify directory exists
   if (!is_directory(directory_path_)) {
-    ACE_ERROR((LM_ERROR,
-               ACE_TEXT("ERROR: %N:%l: Directory does not exist: %C\n"),
-               directory_path_.c_str()));
+    if (!fail_silently) {
+      ACE_ERROR((LM_ERROR,
+                 ACE_TEXT("ERROR: %N:%l: Directory does not exist: %C\n"),
+                 directory_path_.c_str()));
+    }
   }
 }
 

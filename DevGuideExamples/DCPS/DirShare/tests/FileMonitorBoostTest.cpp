@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(test_nonexistent_directory)
   const char* test_dir = "nonexistent_dir_boost_12345";
 
   // Constructor should handle nonexistent directory gracefully
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, true); // fail_silently = true
 
   // Scan should fail gracefully
   std::vector<std::string> created, modified, deleted;

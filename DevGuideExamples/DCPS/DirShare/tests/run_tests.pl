@@ -42,26 +42,15 @@ print "╔═══════════════════════�
 print "\n";
 
 # Check if tests are built
-unless (-f "./ChecksumTest" || -f "./ChecksumTest.exe") {
+unless (-f "./ChecksumBoostTest" || -f "./ChecksumBoostTest.exe") {
     print "${RED}ERROR: Tests not built. Please run 'make' or 'mwc.pl -type gnuace tests.mpc && make' first.${NC}\n";
     exit 1;
 }
 
-# Run original custom framework tests
-print "${YELLOW}--- Custom Test Framework ---${NC}\n\n";
-$status |= run_test("ChecksumTest", "ChecksumTest");
-$status |= run_test("FileUtilsTest", "FileUtilsTest");
-$status |= run_test("FileMonitorTest", "FileMonitorTest");
-
-# Run Boost.Test suites (if built)
-if (-f "./ChecksumBoostTest" || -f "./ChecksumBoostTest.exe") {
-    print "\n${YELLOW}--- Boost.Test Framework ---${NC}\n\n";
-    $status |= run_test("ChecksumBoostTest", "ChecksumBoostTest");
-    $status |= run_test("FileUtilsBoostTest", "FileUtilsBoostTest");
-    $status |= run_test("FileMonitorBoostTest", "FileMonitorBoostTest");
-} else {
-    print "\n${YELLOW}Note: Boost.Test suites not built. Run 'make' to build them.${NC}\n\n";
-}
+# Run Boost.Test suites
+$status |= run_test("ChecksumBoostTest", "ChecksumBoostTest");
+$status |= run_test("FileUtilsBoostTest", "FileUtilsBoostTest");
+$status |= run_test("FileMonitorBoostTest", "FileMonitorBoostTest");
 
 # Summary
 print "╔══════════════════════════════════════════════╗\n";

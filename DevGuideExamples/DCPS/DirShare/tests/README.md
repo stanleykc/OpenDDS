@@ -58,11 +58,6 @@ make
 
 ### Expected Build Artifacts
 
-**Custom Framework Tests:**
-- `ChecksumTest`
-- `FileUtilsTest`
-- `FileMonitorTest`
-
 **Boost.Test Framework Tests:**
 - `ChecksumBoostTest`
 - `FileUtilsBoostTest`
@@ -70,21 +65,13 @@ make
 
 ## Running Tests
 
-### Run all tests (both frameworks):
+### Run all tests:
 
 ```bash
 ./run_tests.pl
 ```
 
-This script runs both the custom framework tests and Boost.Test suites automatically.
-
-### Run individual custom framework tests:
-
-```bash
-./ChecksumTest
-./FileUtilsTest
-./FileMonitorTest
-```
+This script runs all Boost.Test suites automatically.
 
 ### Run individual Boost.Test suites:
 
@@ -108,10 +95,10 @@ This script runs both the custom framework tests and Boost.Test suites automatic
 
 ## Test Output
 
-Tests use a simple assertion-based framework with colored output:
+Tests use the Boost.Test framework with colored output:
 - **Green ✓**: Test passed
 - **Red ✗**: Test failed
-- Each test reports pass/fail and detailed assertion failures
+- Detailed test results and assertion failures
 
 Example output:
 ```
@@ -119,25 +106,22 @@ Example output:
 ║   DirShare Phase 2 Component Unit Tests     ║
 ╔══════════════════════════════════════════════╗
 
-=== Running ChecksumTest ===
-Running test: crc32_empty_data
-  PASS: crc32_empty_data
-Running test: crc32_known_value
-  PASS: crc32_known_value
+=== Running ChecksumBoostTest ===
+Running 6 test cases...
+test_crc32_empty_data: OK
+test_crc32_known_value: OK
 ...
 
-=== Test Results ===
-  Passed: 6
-  Failed: 0
+*** No errors detected
 
-✓ ChecksumTest PASSED
+✓ ChecksumBoostTest PASSED
 ```
 
 ## Boost.Test Framework
 
 ### Why Boost.Test?
 
-The project includes both custom framework tests (original) and Boost.Test suites (Phase 2 Migration):
+All tests use the Boost.Test framework:
 
 **Advantages of Boost.Test:**
 - Industry-standard testing framework

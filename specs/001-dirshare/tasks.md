@@ -89,12 +89,12 @@
 
 **Purpose**: Migrate existing unit tests to Boost.Test framework and expand coverage
 
-- [x] T027h [P] Convert ChecksumTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/ChecksumBoostTest.cpp`
-- [x] T027i [P] Convert FileUtilsTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/FileUtilsBoostTest.cpp`
-- [x] T027j [P] Convert FileMonitorTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/FileMonitorBoostTest.cpp`
-- [x] T027k [P] Add Boost.Test MPC configuration in `tests/tests.mpc` with boost_base
-- [x] T027l [P] Update test runner script to run both custom and Boost.Test suites in `tests/run_tests.pl`
-- [x] T027m [P] Add Boost.Test documentation to `tests/README.md`
+- [X] T027h [P] Convert ChecksumTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/ChecksumBoostTest.cpp`
+- [X] T027i [P] Convert FileUtilsTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/FileUtilsBoostTest.cpp`
+- [X] T027j [P] Convert FileMonitorTest to Boost.Test in `DevGuideExamples/DCPS/DirShare/tests/FileMonitorBoostTest.cpp`
+- [X] T027k [P] Add Boost.Test MPC configuration in `tests/tests.mpc` with Boost include paths
+- [X] T027l [P] Update test runner script to run both custom and Boost.Test suites in `tests/run_tests.pl`
+- [X] T027m [P] Add Boost.Test documentation to `tests/README.md`
 
 **How to run Boost.Test suites**:
 ```bash

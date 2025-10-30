@@ -18,7 +18,8 @@ public:
    * Constructor
    * @param directory_path Path to the directory to monitor
    */
-  explicit FileMonitor(const std::string& directory_path);
+  explicit FileMonitor(const std::string& directory_path,
+                       bool fail_silently = false);
 
   /**
    * Destructor
@@ -65,6 +66,7 @@ private:
   };
 
   std::string directory_path_;
+  bool fail_silently_;
   std::map<std::string, FileState> previous_state_;
   ACE_Thread_Mutex mutex_;
 

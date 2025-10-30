@@ -1,49 +1,5 @@
 // MPC file for DirShare unit tests
 
-project(*ChecksumTest): aceexe, dcps {
-  exename = ChecksumTest
-  after  += DirShare_lib
-
-  libs += DirShare
-  libpaths += ..
-
-  Source_Files {
-    ChecksumTest.cpp
-  }
-
-  Header_Files {
-  }
-}
-
-project(*FileUtilsTest): aceexe, dcps {
-  exename = FileUtilsTest
-  after  += DirShare_lib
-
-  libs += DirShare
-  libpaths += ..
-
-  Source_Files {
-    FileUtilsTest.cpp
-  }
-
-  Header_Files {
-  }
-}
-
-project(*FileMonitorTest): aceexe, dcps {
-  exename = FileMonitorTest
-  after  += DirShare_lib
-
-  libs += DirShare
-  libpaths += ..
-
-  Source_Files {
-    FileMonitorTest.cpp
-  }
-
-  Header_Files {
-  }
-}
 
 // Boost.Test unit tests
 
@@ -53,6 +9,8 @@ project(*ChecksumBoostTest): aceexe, dcps {
 
   libs += DirShare
   libpaths += ..
+
+  includes += /opt/homebrew/include
 
   Source_Files {
     ChecksumBoostTest.cpp
@@ -73,6 +31,8 @@ project(*FileUtilsBoostTest): aceexe, dcps {
   libs += DirShare
   libpaths += ..
 
+  includes += /opt/homebrew/include
+
   Source_Files {
     FileUtilsBoostTest.cpp
   }
@@ -91,6 +51,8 @@ project(*FileMonitorBoostTest): aceexe, dcps {
 
   libs += DirShare
   libpaths += ..
+
+  includes += /opt/homebrew/include
 
   Source_Files {
     FileMonitorBoostTest.cpp
