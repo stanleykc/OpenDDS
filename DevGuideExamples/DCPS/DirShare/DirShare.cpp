@@ -5,6 +5,7 @@
 #include "SnapshotListenerImpl.h"
 #include "FileContentListenerImpl.h"
 #include "FileChunkListenerImpl.h"
+#include "FileEventListenerImpl.h"
 
 #include <dds/DCPS/Marked_Default_Qos.h>
 #include <dds/DCPS/Service_Participant.h>
@@ -37,7 +38,11 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
   int return_code = 0;
 
   try {
-    // Parse command-line arguments
+    // Initialize DDS DomainParticipantFactory (this processes -DCPS* options)
+    DDS::DomainParticipantFactory_var dpf =
+      TheParticipantFactoryWithArgs(argc, argv);
+
+    // Parse remaining command-line arguments (after DDS options are processed)
     ACE_Get_Opt get_opts(argc, argv, ACE_TEXT("h"));
     int option;
     while ((option = get_opts()) != EOF) {
@@ -60,10 +65,6 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                         1);
       }
     }
-
-    // Initialize DDS DomainParticipantFactory
-    DDS::DomainParticipantFactory_var dpf =
-      TheParticipantFactoryWithArgs(argc, argv);
 
     // Get shared directory path from remaining arguments
     if (get_opts.opt_ind() >= argc) {
@@ -279,6 +280,18 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                DEFAULT_DOMAIN_ID));
 
     // Create DataWriters for publishing
+    DDS::DataWriter_var event_writer =
+      publisher->create_datawriter(topic_events,
+                                   DATAWRITER_QOS_DEFAULT,
+                                   0,
+                                   OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!event_writer) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datawriter FileEvent failed!\n")),
+                      1);
+    }
+
     DDS::DataWriter_var snapshot_writer =
       publisher->create_datawriter(topic_snapshot,
                                    DATAWRITER_QOS_DEFAULT,
@@ -316,6 +329,8 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
     }
 
     // Narrow to typed writers
+    DirShare::FileEventDataWriter_var typed_event_writer =
+      DirShare::FileEventDataWriter::_narrow(event_writer);
     DirShare::DirectorySnapshotDataWriter_var typed_snapshot_writer =
       DirShare::DirectorySnapshotDataWriter::_narrow(snapshot_writer);
     DirShare::FileContentDataWriter_var typed_content_writer =
@@ -324,6 +339,8 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
       DirShare::FileChunkDataWriter::_narrow(chunk_writer);
 
     // Create listeners for receiving data
+    DDS::DataReaderListener_var event_listener =
+      new DirShare::FileEventListenerImpl(g_shared_directory, content_writer, chunk_writer);
     DDS::DataReaderListener_var snapshot_listener =
       new DirShare::SnapshotListenerImpl(g_shared_directory, content_writer, chunk_writer);
     DDS::DataReaderListener_var content_listener =
@@ -332,6 +349,18 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
       new DirShare::FileChunkListenerImpl(g_shared_directory);
 
     // Create DataReaders with listeners
+    DDS::DataReader_var event_reader =
+      subscriber->create_datareader(topic_events,
+                                    DATAREADER_QOS_DEFAULT,
+                                    event_listener,
+                                    OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+
+    if (!event_reader) {
+      ACE_ERROR_RETURN((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: create_datareader FileEvent failed!\n")),
+                      1);
+    }
+
     DDS::DataReader_var snapshot_reader =
       subscriber->create_datareader(topic_snapshot,
                                     DATAREADER_QOS_DEFAULT,
@@ -532,12 +561,162 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                g_shared_directory.c_str()));
 
     // Main monitoring loop
-    // Note: File change detection (CREATE/MODIFY/DELETE) will be implemented in Phase 4-6
     while (true) {
       ACE_OS::sleep(POLL_INTERVAL_SEC);
 
-      // Phase 3: Initial sync only - monitoring loop placeholder
-      // Phase 4+ will add: scan_for_changes() and FileEvent publishing
+      // Phase 4: Detect file changes and publish FileEvents
+      std::vector<std::string> created_files;
+      std::vector<std::string> modified_files;
+      std::vector<std::string> deleted_files;
+
+      if (monitor.scan_for_changes(created_files, modified_files, deleted_files)) {
+        // Handle created files (Phase 4)
+        for (size_t i = 0; i < created_files.size(); ++i) {
+          const std::string& filename = created_files[i];
+          std::string full_path = g_shared_directory + "/" + filename;
+
+          ACE_DEBUG((LM_INFO,
+                     ACE_TEXT("(%P|%t) File CREATE detected: %C\n"),
+                     filename.c_str()));
+
+          // Get file metadata
+          DirShare::FileMetadata metadata;
+          if (!monitor.get_file_metadata(filename, metadata)) {
+            ACE_ERROR((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: Failed to get metadata for: %C\n"),
+                       filename.c_str()));
+            continue;
+          }
+
+          // Create and publish FileEvent(CREATE)
+          DirShare::FileEvent event;
+          event.filename = metadata.filename;
+          event.operation = DirShare::CREATE;
+          ACE_Time_Value now = ACE_OS::gettimeofday();
+          event.timestamp_sec = static_cast<CORBA::ULongLong>(now.sec());
+          event.timestamp_nsec = static_cast<CORBA::ULong>(now.usec() * 1000);
+          event.metadata = metadata;
+
+          ret = typed_event_writer->write(event, DDS::HANDLE_NIL);
+          if (ret != DDS::RETCODE_OK) {
+            ACE_ERROR((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: Failed to publish FileEvent(CREATE): %d\n"),
+                       ret));
+            continue;
+          }
+
+          ACE_DEBUG((LM_INFO,
+                     ACE_TEXT("(%P|%t) Published FileEvent(CREATE) for: %C\n"),
+                     filename.c_str()));
+
+          // Publish file content
+          const uint64_t CHUNK_THRESHOLD = 10 * 1024 * 1024; // 10MB
+
+          if (metadata.size < CHUNK_THRESHOLD) {
+            // Send as FileContent (small file)
+            DirShare::FileContent content;
+            content.filename = metadata.filename;
+            content.size = metadata.size;
+            content.checksum = metadata.checksum;
+            content.timestamp_sec = metadata.timestamp_sec;
+            content.timestamp_nsec = metadata.timestamp_nsec;
+
+            // Read file data
+            std::vector<uint8_t> data;
+            if (!DirShare::read_file(full_path, data)) {
+              ACE_ERROR((LM_ERROR,
+                         ACE_TEXT("ERROR: %N:%l: Failed to read file: %C\n"),
+                         full_path.c_str()));
+              continue;
+            }
+
+            content.data.length(static_cast<CORBA::ULong>(data.size()));
+            std::memcpy(content.data.get_buffer(), &data[0], data.size());
+
+            ret = typed_content_writer->write(content, DDS::HANDLE_NIL);
+            if (ret != DDS::RETCODE_OK) {
+              ACE_ERROR((LM_ERROR,
+                         ACE_TEXT("ERROR: %N:%l: write FileContent failed: %d\n"),
+                         ret));
+            } else {
+              ACE_DEBUG((LM_INFO,
+                         ACE_TEXT("(%P|%t) Published FileContent for: %C (%Q bytes)\n"),
+                         filename.c_str(),
+                         metadata.size));
+            }
+          } else {
+            // Send as FileChunks (large file)
+            const uint32_t CHUNK_SIZE = 1024 * 1024; // 1MB
+            uint32_t total_chunks = static_cast<uint32_t>((metadata.size + CHUNK_SIZE - 1) / CHUNK_SIZE);
+
+            ACE_DEBUG((LM_INFO,
+                       ACE_TEXT("(%P|%t) Publishing FileChunks for: %C (%Q bytes, %u chunks)\n"),
+                       filename.c_str(),
+                       metadata.size,
+                       total_chunks));
+
+            // Read entire file
+            std::vector<uint8_t> file_data;
+            if (!DirShare::read_file(full_path, file_data)) {
+              ACE_ERROR((LM_ERROR,
+                         ACE_TEXT("ERROR: %N:%l: Failed to read file: %C\n"),
+                         full_path.c_str()));
+              continue;
+            }
+
+            // Send chunks
+            for (uint32_t chunk_id = 0; chunk_id < total_chunks; ++chunk_id) {
+              DirShare::FileChunk chunk;
+              chunk.filename = metadata.filename;
+              chunk.chunk_id = chunk_id;
+              chunk.total_chunks = total_chunks;
+              chunk.file_size = metadata.size;
+              chunk.file_checksum = metadata.checksum;
+              chunk.timestamp_sec = metadata.timestamp_sec;
+              chunk.timestamp_nsec = metadata.timestamp_nsec;
+
+              // Calculate chunk data
+              uint64_t offset = static_cast<uint64_t>(chunk_id) * CHUNK_SIZE;
+              uint32_t this_chunk_size = static_cast<uint32_t>(
+                (offset + CHUNK_SIZE > metadata.size) ?
+                (metadata.size - offset) : CHUNK_SIZE);
+
+              chunk.data.length(this_chunk_size);
+              std::memcpy(chunk.data.get_buffer(), &file_data[offset], this_chunk_size);
+
+              // Calculate chunk checksum
+              chunk.chunk_checksum = DirShare::compute_checksum(
+                &file_data[offset], this_chunk_size);
+
+              ret = typed_chunk_writer->write(chunk, DDS::HANDLE_NIL);
+              if (ret != DDS::RETCODE_OK) {
+                ACE_ERROR((LM_ERROR,
+                           ACE_TEXT("ERROR: %N:%l: write FileChunk failed: %d\n"),
+                           ret));
+                break;
+              }
+            }
+
+            ACE_DEBUG((LM_INFO,
+                       ACE_TEXT("(%P|%t) Completed publishing chunks for: %C\n"),
+                       filename.c_str()));
+          }
+        }
+
+        // Handle modified files (Phase 5 - placeholder)
+        for (size_t i = 0; i < modified_files.size(); ++i) {
+          ACE_DEBUG((LM_INFO,
+                     ACE_TEXT("(%P|%t) File MODIFY detected: %C (Phase 5 - not yet implemented)\n"),
+                     modified_files[i].c_str()));
+        }
+
+        // Handle deleted files (Phase 6 - placeholder)
+        for (size_t i = 0; i < deleted_files.size(); ++i) {
+          ACE_DEBUG((LM_INFO,
+                     ACE_TEXT("(%P|%t) File DELETE detected: %C (Phase 6 - not yet implemented)\n"),
+                     deleted_files[i].c_str()));
+        }
+      }
     }
 
     // Cleanup (will be reached via signal handler or when loop exits)

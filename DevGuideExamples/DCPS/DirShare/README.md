@@ -77,20 +77,22 @@ perl run_test.pl --rtps
 
 ## Usage
 
-### Basic Usage
+### Basic Usage (RTPS Mode - Recommended)
+
+RTPS mode is the simplest way to get started as it doesn't require a central InfoRepo server.
 
 **Terminal 1: Start first participant**
 ```bash
 mkdir /tmp/dirshare_a
 echo "Hello from A" > /tmp/dirshare_a/fileA.txt
-./dirshare /tmp/dirshare_a
+./dirshare -DCPSConfigFile rtps.ini /tmp/dirshare_a
 ```
 
 **Terminal 2: Start second participant**
 ```bash
 mkdir /tmp/dirshare_b
 echo "Hello from B" > /tmp/dirshare_b/fileB.txt
-./dirshare /tmp/dirshare_b
+./dirshare -DCPSConfigFile rtps.ini /tmp/dirshare_b
 ```
 
 **Result**: Both directories will contain both files within a few seconds.

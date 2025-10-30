@@ -25,6 +25,7 @@ project(*lib): dcpslib, dcps_tcp, dcps_rtps_udp {
     SnapshotListenerImpl.cpp
     FileContentListenerImpl.cpp
     FileChunkListenerImpl.cpp
+    FileEventListenerImpl.cpp
   }
 
   Header_Files {
@@ -34,6 +35,7 @@ project(*lib): dcpslib, dcps_tcp, dcps_rtps_udp {
     SnapshotListenerImpl.h
     FileContentListenerImpl.h
     FileChunkListenerImpl.h
+    FileEventListenerImpl.h
   }
 }
 
