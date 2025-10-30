@@ -1,0 +1,43 @@
+// MPC file for DirShare unit tests
+
+project(*ChecksumTest): aceexe {
+  exename = ChecksumTest
+  after  += DirShare_lib
+
+  libs += DirShare
+
+  Source_Files {
+    ChecksumTest.cpp
+  }
+
+  Header_Files {
+  }
+}
+
+project(*FileUtilsTest): aceexe {
+  exename = FileUtilsTest
+  after  += DirShare_lib
+
+  libs += DirShare
+
+  Source_Files {
+    FileUtilsTest.cpp
+  }
+
+  Header_Files {
+  }
+}
+
+project(*FileMonitorTest): aceexe, dcps {
+  exename = FileMonitorTest
+  after  += DirShare_lib
+
+  libs += DirShare
+
+  Source_Files {
+    FileMonitorTest.cpp
+  }
+
+  Header_Files {
+  }
+}
