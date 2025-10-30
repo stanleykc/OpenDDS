@@ -157,7 +157,7 @@ mwc.pl -type gnuace tests.mpc && make
 
 ---
 
-## Phase 4: User Story 2 - Real-Time File Creation Propagation (Priority: P1) ✅ COMPLETE
+## Phase 4: User Story 2 - Real-Time File Creation Propagation (Priority: P1) ✅ COMPLETE (Including Boost.Test)
 
 **Goal**: Automatically propagate newly created files to all participants during active session
 
@@ -176,16 +176,16 @@ mwc.pl -type gnuace tests.mpc && make
 - [X] T070 [US2] Add validation that file doesn't already exist locally before writing in FileEventListenerImpl
 - [X] T071 [US2] Add ACE logging for file creation events (detected, published, received, applied)
 
-### Boost.Test Unit Tests for User Story 2 🎯 NEW
+### Boost.Test Unit Tests for User Story 2 🎯 NEW ✅ COMPLETE
 
-- [ ] T072 [P] [US2] Create Boost.Test suite for FileEvent creation in `tests/FileEventCreateBoostTest.cpp`
-- [ ] T073 [P] [US2] Add Boost.Test cases for CREATE event detection logic in `tests/FileEventCreateBoostTest.cpp`
-- [ ] T074 [P] [US2] Add Boost.Test cases for CREATE event publishing in `tests/FileEventCreateBoostTest.cpp`
-- [ ] T075 [P] [US2] Add Boost.Test cases for CREATE event handling (trigger transfer) in `tests/FileEventCreateBoostTest.cpp`
-- [ ] T076 [P] [US2] Add Boost.Test cases for file validation (path traversal, absolute paths) in `tests/FileEventCreateBoostTest.cpp`
-- [ ] T077 [P] [US2] Create Boost.Test suite for FileMonitor CREATE detection in `tests/FileMonitorCreateBoostTest.cpp`
-- [ ] T078 [P] [US2] Add Boost.Test cases for scan state comparison in `tests/FileMonitorCreateBoostTest.cpp`
-- [ ] T079 [US2] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+- [X] T072 [P] [US2] Create Boost.Test suite for FileEvent creation in `tests/FileEventCreateBoostTest.cpp`
+- [X] T073 [P] [US2] Add Boost.Test cases for CREATE event detection logic in `tests/FileEventCreateBoostTest.cpp`
+- [X] T074 [P] [US2] Add Boost.Test cases for CREATE event publishing in `tests/FileEventCreateBoostTest.cpp`
+- [X] T075 [P] [US2] Add Boost.Test cases for CREATE event handling (trigger transfer) in `tests/FileEventCreateBoostTest.cpp`
+- [X] T076 [P] [US2] Add Boost.Test cases for file validation (path traversal, absolute paths) in `tests/FileEventCreateBoostTest.cpp`
+- [X] T077 [P] [US2] Create Boost.Test suite for FileMonitor CREATE detection in `tests/FileMonitorCreateBoostTest.cpp`
+- [X] T078 [P] [US2] Add Boost.Test cases for scan state comparison in `tests/FileMonitorCreateBoostTest.cpp`
+- [X] T079 [US2] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
 
 **Checkpoint**: Real-time file creation working with comprehensive Boost.Test coverage
 

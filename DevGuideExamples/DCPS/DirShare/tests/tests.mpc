@@ -130,3 +130,47 @@ project(*FileChunkBoostTest): aceexe, dcps {
   // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
   // No additional libs needed with included/unit_test.hpp
 }
+
+// User Story 2 Boost.Test suites
+
+project(*FileEventCreateBoostTest): aceexe, dcps {
+  exename = FileEventCreateBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  includes += /opt/homebrew/include
+
+  Source_Files {
+    FileEventCreateBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}
+
+project(*FileMonitorCreateBoostTest): aceexe, dcps {
+  exename = FileMonitorCreateBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  includes += /opt/homebrew/include
+
+  Source_Files {
+    FileMonitorCreateBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}
