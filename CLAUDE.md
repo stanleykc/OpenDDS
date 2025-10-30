@@ -247,3 +247,10 @@ mkdir build && cd build
 cmake .. && cmake --build .
 perl ../run_test.pl
 ```
+
+## Active Technologies
+- C++ (C++11 or later per OpenDDS requirements) + OpenDDS, ACE/TAO (auto-configured via OpenDDS configure script) (001-dirshare)
+- Local file system (no database required) (001-dirshare)
+
+## Recent Changes
+- 001-dirshare: Added C++ (C++11 or later per OpenDDS requirements) + OpenDDS, ACE/TAO (auto-configured via OpenDDS configure script)
