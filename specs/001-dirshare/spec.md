@@ -113,30 +113,29 @@ When files are transferred between participants, their metadata (filename, size,
 - **What happens when a participant joins an active session after files have been modified?** The new participant should receive the current state of all files in the shared directory.
 - **What happens when files contain special characters or Unicode in filenames?** The system should properly encode and preserve Unicode filenames across transfers.
 - **What happens when symbolic links exist in the shared directory?** Symbolic links should be ignored completely and not synchronized. This avoids potential security risks (following links outside the shared directory) and complexity (circular links, cross-platform compatibility issues).
+- **What happens when a participant receives a file change and applies it locally?** The system must distinguish this from a user-initiated local change. When applying a remotely-received change, the local file system monitor may detect the change, but the system MUST NOT republish this as a new FileEvent, preventing infinite notification loops between participants.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST detect and publish file creation events in the shared directory to all DDS participants
-- **FR-002**: System MUST detect and publish file modification events in the shared directory to all DDS participants
-- **FR-003**: System MUST detect and publish file deletion events in the shared directory to all DDS participants
-- **FR-004**: System MUST subscribe to file events from other DDS participants and apply changes to the local shared directory
-- **FR-005**: System MUST transfer file content along with file metadata (name, size, modification timestamp) when sharing files
-- **FR-006**: System MUST synchronize existing files when a new participant joins the sharing session
-- **FR-007**: System MUST implement change detection to ensure only modified files are transmitted (not all files on every change)
-- **FR-008**: System MUST resolve concurrent modification conflicts by applying the change with the latest timestamp
-- **FR-009**: System MUST support multiple simultaneous participants in a sharing session (minimum 2, recommended 10+)
-- **FR-010**: System MUST preserve file modification timestamps when transferring files between participants
-- **FR-011**: System MUST support both RTPS and InfoRepo discovery mechanisms (as per OpenDDS standard patterns)
-- **FR-012**: System MUST provide a launcher script (run_test.pl) for testing with both discovery modes
-- **FR-013**: Users MUST be able to specify the directory to share via command-line argument
-- **FR-014**: System MUST validate that the specified directory exists before starting the sharing session
-- **FR-015**: System MUST gracefully handle cleanup when the session terminates (close file handles, cleanup DDS entities)
-- **FR-016**: System MUST support binary file transfers (not just text files)
-- **FR-017**: System MUST verify file integrity after transfer using size validation or checksums
-- **FR-018**: System MUST handle file paths with spaces and special characters correctly
-- **FR-019**: System MUST detect and report errors (disk full, permission denied, etc.) without crashing
+- **FR-001**: System MUST detect and publish all file system events (CREATE, MODIFY, DELETE) in the shared directory to all DDS participants via the FileEvents topic
+- **FR-002**: System MUST subscribe to file events from other DDS participants and apply changes to the local shared directory
+- **FR-003**: System MUST transfer file content along with file metadata (name, size, modification timestamp) when sharing files
+- **FR-004**: System MUST perform initial full synchronization via DirectorySnapshot when a new participant joins, then use delta synchronization (only changed files) for ongoing changes during the session
+- **FR-005**: System MUST resolve concurrent modification conflicts by applying the change with the latest timestamp
+- **FR-006**: System MUST support multiple simultaneous participants in a sharing session (minimum 2, recommended 10+)
+- **FR-007**: System MUST preserve file modification timestamps when transferring files between participants
+- **FR-008**: System MUST support both RTPS and InfoRepo discovery mechanisms (as per OpenDDS standard patterns)
+- **FR-009**: System MUST provide automated testing at three levels: (1) unit tests via Boost.Test, (2) integration tests via run_test.pl for both discovery modes, (3) acceptance tests via Robot Framework mapping to user stories
+- **FR-010**: Users MUST be able to specify the directory to share via command-line argument
+- **FR-011**: System MUST validate that the specified directory exists before starting the sharing session
+- **FR-012**: System MUST gracefully handle cleanup when the session terminates (close file handles, cleanup DDS entities)
+- **FR-013**: System MUST support binary file transfers (not just text files)
+- **FR-014**: System MUST verify file integrity after transfer using CRC32 checksums
+- **FR-015**: System MUST handle file paths with spaces, Unicode characters, and special symbols correctly
+- **FR-016**: System MUST detect errors (disk full, permission denied, file locked, etc.) and report them via ACE_ERROR logging to stderr without crashing the application
+- **FR-017**: System MUST distinguish between locally-initiated file changes and remotely-received file changes to prevent notification loops (when a participant applies a file change received from a remote source, it MUST NOT republish that change as a new FileEvent)
 
 ### Key Entities *(include if feature involves data)*
 
@@ -171,10 +170,10 @@ When files are transferred between participants, their metadata (filename, size,
 
 - **SC-001**: Users can establish a sharing session and synchronize an initial set of files (up to 100 files) within 30 seconds
 - **SC-002**: File creation on one machine appears on other participants' machines within 5 seconds under normal network conditions
-- **SC-003**: File modifications propagate to other participants within 5 seconds for files up to 10MB
-- **SC-004**: System efficiently handles file synchronization by transmitting only changed files, reducing bandwidth by at least 80% compared to re-transmitting all files
+- **SC-003**: File modifications propagate to other participants within 5 seconds for files up to 10MB under normal network conditions (defined as: <50ms latency, >10Mbps bandwidth, <1% packet loss)
+- **SC-004**: System efficiently handles file synchronization by transmitting only changed files, reducing bandwidth by at least 80% compared to re-transmitting all files (measurement: in a scenario with 10 synchronized files where 1 file is modified, verify only 1 file is transferred, not all 10)
 - **SC-005**: System successfully resolves 100% of concurrent modification conflicts without data corruption or crashes
-- **SC-006**: System supports at least 10 simultaneous participants in a sharing session without significant performance degradation
+- **SC-006**: System supports at least 10 simultaneous participants in a sharing session while maintaining <5 second file propagation time (no significant performance degradation defined as: propagation time remains within P1 requirements)
 - **SC-007**: File integrity is maintained with 100% accuracy - all transferred files have identical content and metadata to the source
 - **SC-008**: System handles at least 1000 file operations (create, modify, delete) during a session without memory leaks or crashes
 - **SC-009**: Users can successfully share files with names containing Unicode characters and special symbols without corruption
@@ -212,7 +211,10 @@ When files are transferred between participants, their metadata (filename, size,
 
 - **OpenDDS**: Core DDS implementation for publish-subscribe messaging
 - **ACE/TAO**: Platform abstraction and CORBA ORB (auto-configured via OpenDDS)
-- **Perl**: Required for test runner scripts (run_test.pl)
+- **Boost**: Boost.Test framework for unit testing
+- **Perl**: Required for integration test runner scripts (run_test.pl)
+- **Python 3.8+**: Required for Robot Framework acceptance testing
+- **Robot Framework 6.0+**: Acceptance testing framework with Process and OperatingSystem libraries
 - **File System API**: Standard OS file I/O capabilities
 - **File System Monitoring**: OS-specific APIs or polling mechanisms to detect file changes (inotify on Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows, or simple polling)
 - **MPC Build System**: For generating makefiles and build configuration
@@ -227,4 +229,4 @@ When files are transferred between participants, their metadata (filename, size,
 - Must provide both MPC and CMake build configurations
 - Should use ACE logging macros for error handling and debug output
 - Must follow OpenDDS DevGuideExamples directory structure and naming conventions
-- File transfer payload size must be compatible with DDS message size limits (may require chunking for large files)
+- File transfer payload size must be compatible with DDS message size limits: files >=10MB MUST use chunking (1MB chunks), with 1GB maximum file size per Assumption #8

@@ -174,3 +174,47 @@ project(*FileMonitorCreateBoostTest): aceexe, dcps {
   // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
   // No additional libs needed with included/unit_test.hpp
 }
+
+// User Story 3 Boost.Test suites
+
+project(*FileEventModifyBoostTest): aceexe, dcps {
+  exename = FileEventModifyBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  includes += /opt/homebrew/include
+
+  Source_Files {
+    FileEventModifyBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}
+
+project(*TimestampComparisonBoostTest): aceexe, dcps {
+  exename = TimestampComparisonBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  includes += /opt/homebrew/include
+
+  Source_Files {
+    TimestampComparisonBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}

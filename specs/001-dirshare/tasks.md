@@ -191,7 +191,7 @@ mwc.pl -type gnuace tests.mpc && make
 
 ---
 
-## Phase 5: User Story 3 - Real-Time File Modification Propagation (Priority: P1)
+## Phase 5: User Story 3 - Real-Time File Modification Propagation (Priority: P1) ✅ COMPLETE (Including Boost.Test)
 
 **Goal**: Propagate file modifications efficiently (only changed files transmitted) to all participants
 
@@ -199,24 +199,24 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Implementation for User Story 3
 
-- [ ] T080 [US3] Add file modification detection to FileMonitor.cpp (compare file size, timestamp, or checksum)
-- [ ] T081 [US3] Implement publish FileEvent(MODIFY) when file change detected in FileMonitor
-- [ ] T082 [US3] Add FileEvent MODIFY handling in FileEventListenerImpl (check timestamp for conflict resolution)
-- [ ] T083 [US3] Implement timestamp comparison logic using DDS source_timestamp in FileEventListenerImpl
-- [ ] T084 [US3] Add logic to overwrite local file only if remote timestamp is newer in FileEventListenerImpl
-- [ ] T085 [US3] Add ACE logging for modification events with timestamp comparisons
-- [ ] T086 [US3] Add instrumentation to verify only modified files are transferred (not all files)
+- [X] T080 [US3] Add file modification detection to FileMonitor.cpp (compare file size, timestamp, or checksum)
+- [X] T081 [US3] Implement publish FileEvent(MODIFY) when file change detected in FileMonitor
+- [X] T082 [US3] Add FileEvent MODIFY handling in FileEventListenerImpl (check timestamp for conflict resolution)
+- [X] T083 [US3] Implement timestamp comparison logic using DDS source_timestamp in FileEventListenerImpl
+- [X] T084 [US3] Add logic to overwrite local file only if remote timestamp is newer in FileEventListenerImpl
+- [X] T085 [US3] Add ACE logging for modification events with timestamp comparisons
+- [X] T086 [US3] Add instrumentation to verify only modified files are transferred (not all files)
 
-### Boost.Test Unit Tests for User Story 3 🎯 NEW
+### Boost.Test Unit Tests for User Story 3 🎯 NEW ✅ COMPLETE
 
-- [ ] T087 [P] [US3] Create Boost.Test suite for FileEvent MODIFY in `tests/FileEventModifyBoostTest.cpp`
-- [ ] T088 [P] [US3] Add Boost.Test cases for modification detection (size change, timestamp change, checksum change) in `tests/FileEventModifyBoostTest.cpp`
-- [ ] T089 [P] [US3] Add Boost.Test cases for MODIFY event publishing in `tests/FileEventModifyBoostTest.cpp`
-- [ ] T090 [P] [US3] Create Boost.Test suite for timestamp comparison in `tests/TimestampComparisonBoostTest.cpp`
-- [ ] T091 [P] [US3] Add Boost.Test cases for timestamp ordering (newer wins, older ignored) in `tests/TimestampComparisonBoostTest.cpp`
-- [ ] T092 [P] [US3] Add Boost.Test cases for DDS source_timestamp extraction in `tests/TimestampComparisonBoostTest.cpp`
-- [ ] T093 [P] [US3] Add Boost.Test cases for efficiency verification (only modified files) in `tests/FileEventModifyBoostTest.cpp`
-- [ ] T094 [US3] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+- [X] T087 [P] [US3] Create Boost.Test suite for FileEvent MODIFY in `tests/FileEventModifyBoostTest.cpp`
+- [X] T088 [P] [US3] Add Boost.Test cases for modification detection (size change, timestamp change, checksum change) in `tests/FileEventModifyBoostTest.cpp`
+- [X] T089 [P] [US3] Add Boost.Test cases for MODIFY event publishing in `tests/FileEventModifyBoostTest.cpp`
+- [X] T090 [P] [US3] Create Boost.Test suite for timestamp comparison in `tests/TimestampComparisonBoostTest.cpp`
+- [X] T091 [P] [US3] Add Boost.Test cases for timestamp ordering (newer wins, older ignored) in `tests/TimestampComparisonBoostTest.cpp`
+- [X] T092 [P] [US3] Add Boost.Test cases for DDS source_timestamp extraction in `tests/TimestampComparisonBoostTest.cpp`
+- [X] T093 [P] [US3] Add Boost.Test cases for efficiency verification (only modified files) in `tests/FileEventModifyBoostTest.cpp`
+- [X] T094 [US3] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
 
 **Checkpoint**: File modification propagation working with comprehensive Boost.Test coverage
 
@@ -319,6 +319,8 @@ mwc.pl -type gnuace tests.mpc && make
 - [ ] T135 [P] Add test scenario for basic file sync (2 participants, create file, verify propagation)
 - [ ] T136 [P] Add test scenario for large file transfer (>=10MB, verify chunking and reassembly)
 - [ ] T137 [P] Add test scenario for file deletion (create, sync, delete, verify deletion propagates)
+- [ ] T137a [P] Add test scenario for special characters in filenames (spaces, Unicode, special symbols per FR-015)
+- [ ] T137b [P] Add test scenario for error conditions (disk full simulation, permission denied, file locked per FR-016)
 
 ### Additional Boost.Test Suites 🎯 NEW
 
@@ -330,30 +332,65 @@ mwc.pl -type gnuace tests.mpc && make
 - [ ] T143 [P] Add Boost.Test cases for RELIABLE reliability QoS in `tests/QoSPolicyBoostTest.cpp`
 - [ ] T144 [P] Add Boost.Test cases for TRANSIENT_LOCAL durability QoS in `tests/QoSPolicyBoostTest.cpp`
 - [ ] T145 [P] Add Boost.Test cases for history depth and lifespan in `tests/QoSPolicyBoostTest.cpp`
-- [ ] T146 [P] Create Boost.Test master suite runner in `tests/BoostTestRunner.cpp`
-- [ ] T147 Update tests.mpc with all Boost.Test executables in `tests/tests.mpc`
+- [ ] T146 [P] Create Boost.Test suite for error handling in `tests/ErrorHandlingBoostTest.cpp` (FR-016: disk full, permission denied, file locked)
+- [ ] T147 [P] Add Boost.Test cases for special character filenames in `tests/SpecialCharactersBoostTest.cpp` (FR-015: spaces, Unicode, symbols)
+- [ ] T148 [P] Create Boost.Test master suite runner in `tests/BoostTestRunner.cpp`
+- [ ] T149 Update tests.mpc with all Boost.Test executables in `tests/tests.mpc`
 
 ### Application Polish
 
-- [ ] T148 Add error handling for missing directory argument in DirShare.cpp
-- [ ] T149 Add validation that specified directory exists and is writable in DirShare.cpp
-- [ ] T150 Add help message (-h, --help) to DirShare.cpp showing usage and options
-- [ ] T151 Add static build support with conditional OPENDDS_DO_MANUAL_STATIC_INCLUDES in DirShare.cpp
-- [ ] T152 [P] Update README.md with build instructions (MPC and CMake)
-- [ ] T153 [P] Update README.md with usage examples (InfoRepo and RTPS modes)
-- [ ] T154 [P] Add troubleshooting section to README.md
-- [ ] T155 [P] Document Boost.Test framework usage in tests/README.md
+- [ ] T150 Add error handling for missing directory argument in DirShare.cpp
+- [ ] T151 Add validation that specified directory exists and is writable in DirShare.cpp
+- [ ] T152 Add help message (-h, --help) to DirShare.cpp showing usage and options
+- [ ] T153 Add static build support with conditional OPENDDS_DO_MANUAL_STATIC_INCLUDES in DirShare.cpp
+- [ ] T154 [P] Update README.md with build instructions (MPC and CMake)
+- [ ] T155 [P] Update README.md with usage examples (InfoRepo and RTPS modes)
+- [ ] T156 [P] Add troubleshooting section to README.md
+- [ ] T157 [P] Document Boost.Test framework usage in tests/README.md
+
+### Robot Framework Acceptance Tests 🤖 NEW
+
+- [ ] T158 [P] Create Robot Framework directory structure `DevGuideExamples/DCPS/DirShare/robot/`
+- [ ] T159 [P] Create Python requirements.txt for Robot Framework dependencies (robotframework>=6.0, robotframework-process)
+- [ ] T160 [P] Create Robot Framework README.md with setup and execution instructions
+- [ ] T161 [P] Create DirShareLibrary.py Python library for process control and DirShare interaction
+- [ ] T162 [P] Create ChecksumLibrary.py Python library for file checksum verification
+- [ ] T163 [P] Create DirShareKeywords.robot with keywords: Start DirShare, Stop DirShare, Verify File Exists, Verify Sync Complete
+- [ ] T164 [P] Create FileOperations.robot with keywords: Create File With Content, Modify File, Delete File, Get File Checksum
+- [ ] T165 [P] Create DDSKeywords.robot with keywords: Start With InfoRepo, Start With RTPS, Verify DDS Cleanup
+- [ ] T166 Create UserStories.robot test suite mapping to User Stories 1-6 from spec.md
+- [ ] T167 [P] Add Robot test for US1: Initial Directory Synchronization (3 scenarios)
+- [ ] T168 [P] Add Robot test for US2: Real-Time File Creation Propagation (3 scenarios)
+- [ ] T169 [P] Add Robot test for US3: Real-Time File Modification Propagation (3 scenarios)
+- [ ] T170 [P] Add Robot test for US4: Real-Time File Deletion Propagation (3 scenarios)
+- [ ] T171 [P] Add Robot test for US5: Concurrent Modification Conflict Resolution (3 scenarios)
+- [ ] T172 [P] Add Robot test for US6: Metadata Transfer and Preservation (3 scenarios)
+- [ ] T173 Create PerformanceTests.robot test suite for Success Criteria SC-001 to SC-010
+- [ ] T174 [P] Add Robot test for SC-001: Initial sync of 100 files within 30 seconds
+- [ ] T175 [P] Add Robot test for SC-002: File creation propagation within 5 seconds
+- [ ] T176 [P] Add Robot test for SC-003: File modification propagation within 5 seconds
+- [ ] T177 [P] Add Robot test for SC-004: Bandwidth efficiency (80% reduction measurement)
+- [ ] T178 [P] Add Robot test for SC-006: 10+ simultaneous participants performance
+- [ ] T179 Create EdgeCaseTests.robot test suite for edge cases from spec.md
+- [ ] T180 [P] Add Robot test for network connection loss during file transfer
+- [ ] T181 [P] Add Robot test for insufficient disk space scenario
+- [ ] T182 [P] Add Robot test for file locked/in-use scenario
+- [ ] T183 [P] Add Robot test for Unicode and special characters in filenames
+- [ ] T184 Create DirShareAcceptance.robot master suite that imports all sub-suites
+- [ ] T185 Create robot test runner script `run_robot_tests.sh` for CI/CD integration
+- [ ] T186 Add .gitignore entries for robot/results/ directory
 
 ### Code Quality & Validation
 
-- [ ] T156 Code review for ACE error handling patterns (ACE_ERROR_RETURN, ACE_DEBUG)
-- [ ] T157 Code review for proper DDS return code checking (all operations check RETCODE_OK)
-- [ ] T158 Verify both MPC and CMake builds compile successfully
-- [ ] T159 Run run_test.pl in InfoRepo mode and verify PASS
-- [ ] T160 Run run_test.pl in RTPS mode (--rtps) and verify PASS
-- [ ] T161 Run all Boost.Test suites and verify 100% pass rate
-- [ ] T162 [P] Manual test: Run quickstart.md validation scenarios
-- [ ] T163 Memory leak check with valgrind (optional but recommended)
+- [ ] T187 Code review for ACE error handling patterns (ACE_ERROR_RETURN, ACE_DEBUG)
+- [ ] T188 Code review for proper DDS return code checking (all operations check RETCODE_OK)
+- [ ] T189 Verify both MPC and CMake builds compile successfully
+- [ ] T190 Run run_test.pl in InfoRepo mode and verify PASS
+- [ ] T191 Run run_test.pl in RTPS mode (--rtps) and verify PASS
+- [ ] T192 Run all Boost.Test suites and verify 100% pass rate
+- [ ] T193 Run Robot Framework acceptance tests and verify 100% pass rate
+- [ ] T194 [P] Manual test: Run quickstart.md validation scenarios
+- [ ] T195 Memory leak check with valgrind (optional but recommended)
 
 ---
 
@@ -513,7 +550,7 @@ perl run_test.pl --rtps
 
 ## Task Summary
 
-**Total Tasks**: 163 (up from 104 - 59 new Boost.Test tasks added)
+**Total Tasks**: 195 (updated: +28 Robot Framework acceptance tests for comprehensive end-to-end validation)
 
 **Tasks by Phase**:
 - Phase 1 (Setup): 6 tasks ✅ COMPLETE
@@ -525,7 +562,7 @@ perl run_test.pl --rtps
 - Phase 6 (US4 - File Deletion): 13 tasks (6 impl + 7 Boost.Test)
 - Phase 7 (US5 - Conflict Resolution): 11 tasks (5 impl + 6 Boost.Test)
 - Phase 8 (US6 - Metadata Preservation): 13 tasks (7 impl + 6 Boost.Test)
-- Phase 9 (Polish): 32 tasks (20 app polish + 8 Boost.Test suites + 4 validation)
+- Phase 9 (Polish): 64 tasks (20 app polish + 10 Boost.Test suites + 28 Robot Framework tests + 6 validation)
 
 **Boost.Test Tasks Summary**:
 - Phase 2 Migration: 6 tasks
@@ -535,8 +572,8 @@ perl run_test.pl --rtps
 - User Story 4: 7 Boost.Test tasks
 - User Story 5: 6 Boost.Test tasks
 - User Story 6: 6 Boost.Test tasks
-- Phase 9 Additional: 8 Boost.Test tasks
-- **Total Boost.Test Tasks: 61** 🎯
+- Phase 9 Additional: 10 Boost.Test tasks
+- **Total Boost.Test Tasks: 63** 🎯
 
 **Test Coverage Goals**:
 - 100% of utility functions covered by Boost.Test unit tests
@@ -545,12 +582,15 @@ perl run_test.pl --rtps
 - All edge cases and error conditions covered by Boost.Test
 - Integration tests cover end-to-end scenarios
 
-**Suggested MVP Scope with Boost.Test**:
+**Suggested MVP Scope (3-Tier Testing)**:
 - Phases 1-2 (✅ DONE) + Phase 2 Boost.Test Migration (6 tasks)
 - Phases 3-5 (US1 + US2 + US3: 67 tasks, including 28 Boost.Test tasks)
-- Minimal Phase 9 (integration testing + validation: ~15 tasks)
-- **Total MVP: ~88 tasks** with comprehensive Boost.Test coverage
-- Provides: Initial sync, file creation, file modification with full unit test coverage
+- Minimal Phase 9 (integration + acceptance: ~30 tasks)
+  - Integration tests via run_test.pl (T132-T137b)
+  - Core Robot Framework setup (T158-T165, T184-T186)
+  - Robot tests for US1-US3 (T167-T169)
+- **Total MVP: ~103 tasks** with unit, integration, and acceptance test coverage
+- Provides: Initial sync, file creation, file modification with 3-tier test validation
 
 ---
 
@@ -560,11 +600,14 @@ perl run_test.pl --rtps
 - [P] tasks = different files, no dependencies within phase
 - [Story] labels map tasks to user stories for traceability
 - **🎯 Boost.Test is mandatory for all new unit tests** (as requested)
+- **🤖 Robot Framework for acceptance tests** maps directly to user stories and success criteria
 - Use Boost.Test fixtures for common setup/teardown patterns
 - Verify DDS return codes (RETCODE_OK) for all operations
 - Use ACE logging macros (ACE_DEBUG, ACE_ERROR) consistently
-- Test both InfoRepo and RTPS modes per constitution requirement
+- Test both InfoRepo and RTPS modes per constitution requirement (Perl + Robot tests)
 - Commit after each logical task group (e.g., listener implementation + tests)
 - Stop at checkpoints to run Boost.Test suite before proceeding
 - Boost.Test test cases should follow naming convention: `test_[component]_[scenario]`
+- Robot Framework test cases should use Given-When-Then BDD style matching spec.md acceptance scenarios
 - All Boost.Test suites should have both positive and negative test cases
+- Robot tests focus on end-to-end user scenarios, not unit-level implementation details

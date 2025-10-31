@@ -182,6 +182,33 @@ void FileChunkListenerImpl::finalize_file(
 {
   std::string full_path = shared_dir_ + "/" + filename;
 
+  // Check if file exists and compare timestamps for MODIFY case
+  if (file_exists(full_path)) {
+    unsigned long long local_timestamp_sec;
+    unsigned long local_timestamp_nsec;
+    if (get_file_mtime(full_path, local_timestamp_sec, local_timestamp_nsec)) {
+      // Compare remote timestamp with local timestamp
+      bool remote_is_newer = false;
+      if (chunked_file.timestamp_sec > local_timestamp_sec) {
+        remote_is_newer = true;
+      } else if (chunked_file.timestamp_sec == local_timestamp_sec &&
+                 chunked_file.timestamp_nsec > local_timestamp_nsec) {
+        remote_is_newer = true;
+      }
+
+      if (!remote_is_newer) {
+        ACE_DEBUG((LM_INFO,
+                   ACE_TEXT("(%P|%t) Local file is newer or same, ignoring FileChunk reassembly for: %C\n"),
+                   filename.c_str()));
+        return;
+      }
+
+      ACE_DEBUG((LM_INFO,
+                 ACE_TEXT("(%P|%t) Remote file is newer, updating local file with reassembled chunks: %C\n"),
+                 filename.c_str()));
+    }
+  }
+
   // Verify file checksum
   uint32_t computed_checksum = compute_checksum(
     &chunked_file.data[0],

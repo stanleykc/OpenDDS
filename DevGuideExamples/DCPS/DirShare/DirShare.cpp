@@ -703,11 +703,137 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
           }
         }
 
-        // Handle modified files (Phase 5 - placeholder)
+        // Handle modified files (Phase 5)
         for (size_t i = 0; i < modified_files.size(); ++i) {
+          const std::string& filename = modified_files[i];
+          std::string full_path = g_shared_directory + "/" + filename;
+
           ACE_DEBUG((LM_INFO,
-                     ACE_TEXT("(%P|%t) File MODIFY detected: %C (Phase 5 - not yet implemented)\n"),
-                     modified_files[i].c_str()));
+                     ACE_TEXT("(%P|%t) File MODIFY detected: %C\n"),
+                     filename.c_str()));
+
+          // Get file metadata
+          DirShare::FileMetadata metadata;
+          if (!monitor.get_file_metadata(filename, metadata)) {
+            ACE_ERROR((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: Failed to get metadata for: %C\n"),
+                       filename.c_str()));
+            continue;
+          }
+
+          // Create and publish FileEvent(MODIFY)
+          DirShare::FileEvent event;
+          event.filename = metadata.filename;
+          event.operation = DirShare::MODIFY;
+          ACE_Time_Value now = ACE_OS::gettimeofday();
+          event.timestamp_sec = static_cast<CORBA::ULongLong>(now.sec());
+          event.timestamp_nsec = static_cast<CORBA::ULong>(now.usec() * 1000);
+          event.metadata = metadata;
+
+          ret = typed_event_writer->write(event, DDS::HANDLE_NIL);
+          if (ret != DDS::RETCODE_OK) {
+            ACE_ERROR((LM_ERROR,
+                       ACE_TEXT("ERROR: %N:%l: Failed to publish FileEvent(MODIFY): %d\n"),
+                       ret));
+            continue;
+          }
+
+          ACE_DEBUG((LM_INFO,
+                     ACE_TEXT("(%P|%t) Published FileEvent(MODIFY) for: %C\n"),
+                     filename.c_str()));
+
+          // Publish updated file content
+          const uint64_t CHUNK_THRESHOLD = 10 * 1024 * 1024; // 10MB
+
+          if (metadata.size < CHUNK_THRESHOLD) {
+            // Send as FileContent (small file)
+            DirShare::FileContent content;
+            content.filename = metadata.filename;
+            content.size = metadata.size;
+            content.checksum = metadata.checksum;
+            content.timestamp_sec = metadata.timestamp_sec;
+            content.timestamp_nsec = metadata.timestamp_nsec;
+
+            // Read file data
+            std::vector<uint8_t> data;
+            if (!DirShare::read_file(full_path, data)) {
+              ACE_ERROR((LM_ERROR,
+                         ACE_TEXT("ERROR: %N:%l: Failed to read file: %C\n"),
+                         full_path.c_str()));
+              continue;
+            }
+
+            content.data.length(static_cast<CORBA::ULong>(data.size()));
+            std::memcpy(content.data.get_buffer(), &data[0], data.size());
+
+            ret = typed_content_writer->write(content, DDS::HANDLE_NIL);
+            if (ret != DDS::RETCODE_OK) {
+              ACE_ERROR((LM_ERROR,
+                         ACE_TEXT("ERROR: %N:%l: write FileContent failed: %d\n"),
+                         ret));
+            } else {
+              ACE_DEBUG((LM_INFO,
+                         ACE_TEXT("(%P|%t) Published FileContent for MODIFY: %C (%Q bytes)\n"),
+                         filename.c_str(),
+                         metadata.size));
+            }
+          } else {
+            // Send as FileChunks (large file)
+            const uint32_t CHUNK_SIZE = 1024 * 1024; // 1MB
+            uint32_t total_chunks = static_cast<uint32_t>((metadata.size + CHUNK_SIZE - 1) / CHUNK_SIZE);
+
+            ACE_DEBUG((LM_INFO,
+                       ACE_TEXT("(%P|%t) Publishing FileChunks for MODIFY: %C (%Q bytes, %u chunks)\n"),
+                       filename.c_str(),
+                       metadata.size,
+                       total_chunks));
+
+            // Read entire file
+            std::vector<uint8_t> file_data;
+            if (!DirShare::read_file(full_path, file_data)) {
+              ACE_ERROR((LM_ERROR,
+                         ACE_TEXT("ERROR: %N:%l: Failed to read file: %C\n"),
+                         full_path.c_str()));
+              continue;
+            }
+
+            // Send chunks
+            for (uint32_t chunk_id = 0; chunk_id < total_chunks; ++chunk_id) {
+              DirShare::FileChunk chunk;
+              chunk.filename = metadata.filename;
+              chunk.chunk_id = chunk_id;
+              chunk.total_chunks = total_chunks;
+              chunk.file_size = metadata.size;
+              chunk.file_checksum = metadata.checksum;
+              chunk.timestamp_sec = metadata.timestamp_sec;
+              chunk.timestamp_nsec = metadata.timestamp_nsec;
+
+              // Calculate chunk data
+              uint64_t offset = static_cast<uint64_t>(chunk_id) * CHUNK_SIZE;
+              uint32_t this_chunk_size = static_cast<uint32_t>(
+                (offset + CHUNK_SIZE > metadata.size) ?
+                (metadata.size - offset) : CHUNK_SIZE);
+
+              chunk.data.length(this_chunk_size);
+              std::memcpy(chunk.data.get_buffer(), &file_data[offset], this_chunk_size);
+
+              // Calculate chunk checksum
+              chunk.chunk_checksum = DirShare::compute_checksum(
+                &file_data[offset], this_chunk_size);
+
+              ret = typed_chunk_writer->write(chunk, DDS::HANDLE_NIL);
+              if (ret != DDS::RETCODE_OK) {
+                ACE_ERROR((LM_ERROR,
+                           ACE_TEXT("ERROR: %N:%l: write FileChunk failed: %d\n"),
+                           ret));
+                break;
+              }
+            }
+
+            ACE_DEBUG((LM_INFO,
+                       ACE_TEXT("(%P|%t) Completed publishing chunks for MODIFY: %C\n"),
+                       filename.c_str()));
+          }
         }
 
         // Handle deleted files (Phase 6 - placeholder)

@@ -112,15 +112,64 @@ void FileEventListenerImpl::handle_create_event(const FileEvent& event)
 void FileEventListenerImpl::handle_modify_event(const FileEvent& event)
 {
   std::string filename = event.filename.in();
+  std::string full_path = shared_directory_ + "/" + filename;
 
   ACE_DEBUG((LM_INFO,
-             ACE_TEXT("(%P|%t) Handling MODIFY event for: %C (Phase 5 - not yet implemented)\n"),
+             ACE_TEXT("(%P|%t) Handling MODIFY event for: %C\n"),
              filename.c_str()));
 
-  // Phase 5 implementation:
-  // - Compare timestamps with local file
-  // - If remote is newer, accept the update
-  // - Otherwise, ignore
+  // Check if file exists locally
+  if (!file_exists(full_path)) {
+    ACE_DEBUG((LM_INFO,
+               ACE_TEXT("(%P|%t) Local file does not exist, treating MODIFY as CREATE: %C\n"),
+               filename.c_str()));
+    // File will be received via FileContent or FileChunk topic
+    return;
+  }
+
+  // Get local file timestamp
+  unsigned long long local_timestamp_sec;
+  unsigned long local_timestamp_nsec;
+  if (!get_file_mtime(full_path, local_timestamp_sec, local_timestamp_nsec)) {
+    ACE_ERROR((LM_ERROR,
+               ACE_TEXT("ERROR: %N:%l: Failed to get local file timestamp: %C\n"),
+               full_path.c_str()));
+    return;
+  }
+
+  // Compare timestamps (remote vs local)
+  unsigned long long remote_timestamp_sec = event.metadata.timestamp_sec;
+  unsigned long remote_timestamp_nsec = event.metadata.timestamp_nsec;
+
+  ACE_DEBUG((LM_INFO,
+             ACE_TEXT("(%P|%t) Timestamp comparison for %C:\n")
+             ACE_TEXT("  Local:  %Q.%09u\n")
+             ACE_TEXT("  Remote: %Q.%09u\n"),
+             filename.c_str(),
+             local_timestamp_sec, local_timestamp_nsec,
+             remote_timestamp_sec, remote_timestamp_nsec));
+
+  // Check if remote file is newer
+  bool remote_is_newer = false;
+  if (remote_timestamp_sec > local_timestamp_sec) {
+    remote_is_newer = true;
+  } else if (remote_timestamp_sec == local_timestamp_sec &&
+             remote_timestamp_nsec > local_timestamp_nsec) {
+    remote_is_newer = true;
+  }
+
+  if (remote_is_newer) {
+    ACE_DEBUG((LM_INFO,
+               ACE_TEXT("(%P|%t) Remote file is newer, accepting MODIFY for: %C\n"),
+               filename.c_str()));
+    // File will be received via FileContent or FileChunk topic
+    // The listener will overwrite the local file
+  } else {
+    ACE_DEBUG((LM_INFO,
+               ACE_TEXT("(%P|%t) Local file is newer or same, ignoring MODIFY for: %C\n"),
+               filename.c_str()));
+    // Ignore this modification event - local version wins
+  }
 }
 
 void FileEventListenerImpl::handle_delete_event(const FileEvent& event)
