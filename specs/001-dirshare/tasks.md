@@ -378,18 +378,18 @@ mwc.pl -type gnuace tests.mpc && make
 
 ### Robot Framework Acceptance Tests 🤖 NEW
 
-- [ ] T158 [P] Create Robot Framework directory structure `DevGuideExamples/DCPS/DirShare/robot/`
-- [ ] T159 [P] Create Python requirements.txt for Robot Framework dependencies (robotframework>=6.0, robotframework-process)
-- [ ] T160 [P] Create Robot Framework README.md with setup and execution instructions
-- [ ] T161 [P] Create DirShareLibrary.py Python library for process control and DirShare interaction
-- [ ] T162 [P] Create ChecksumLibrary.py Python library for file checksum verification
-- [ ] T163 [P] Create DirShareKeywords.robot with keywords: Start DirShare, Stop DirShare, Verify File Exists, Verify Sync Complete
-- [ ] T164 [P] Create FileOperations.robot with keywords: Create File With Content, Modify File, Delete File, Get File Checksum
-- [ ] T165 [P] Create DDSKeywords.robot with keywords: Start With InfoRepo, Start With RTPS, Verify DDS Cleanup
-- [ ] T166 Create UserStories.robot test suite mapping to User Stories 1-6 from spec.md
-- [ ] T167 [P] Add Robot test for US1: Initial Directory Synchronization (3 scenarios)
-- [ ] T168 [P] Add Robot test for US2: Real-Time File Creation Propagation (3 scenarios)
-- [ ] T169 [P] Add Robot test for US3: Real-Time File Modification Propagation (3 scenarios)
+- [X] T158 [P] Create Robot Framework directory structure `DevGuideExamples/DCPS/DirShare/robot/`
+- [X] T159 [P] Create Python requirements.txt for Robot Framework dependencies (robotframework>=6.0, robotframework-process)
+- [X] T160 [P] Create Robot Framework README.md with setup and execution instructions
+- [X] T161 [P] Create DirShareLibrary.py Python library for process control and DirShare interaction
+- [X] T162 [P] Create ChecksumLibrary.py Python library for file checksum verification
+- [X] T163 [P] Create DirShareKeywords.robot with keywords: Start DirShare, Stop DirShare, Verify File Exists, Verify Sync Complete
+- [X] T164 [P] Create FileOperations.robot with keywords: Create File With Content, Modify File, Delete File, Get File Checksum
+- [X] T165 [P] Create DDSKeywords.robot with keywords: Start With InfoRepo, Start With RTPS, Verify DDS Cleanup
+- [X] T166 Create UserStories.robot test suite mapping to User Stories 1-6 from spec.md
+- [X] T167 [P] Add Robot test for US1: Initial Directory Synchronization (3 scenarios)
+- [X] T168 [P] Add Robot test for US2: Real-Time File Creation Propagation (3 scenarios)
+- [X] T169 [P] Add Robot test for US3: Real-Time File Modification Propagation (3 scenarios)
 - [ ] T170 [P] Add Robot test for US4: Real-Time File Deletion Propagation (3 scenarios)
 - [ ] T171 [P] Add Robot test for US5: Concurrent Modification Conflict Resolution (3 scenarios)
 - [ ] T172 [P] Add Robot test for US6: Metadata Transfer and Preservation (3 scenarios)
