@@ -271,9 +271,13 @@ Participant A Creates Multiple Files
 Participant A Creates Large File
     [Documentation]    Create a large file on participant A
     [Arguments]    ${filename}    ${size}
+    ${start_time}=    Get Current Date
     Create Large File    ${DIR_A}    ${filename}    ${size}
+    Set Test Variable    ${START_TIME}    ${start_time}
     Set Test Variable    ${LARGE_FILE}    ${filename}
     Log    Participant A created large file: ${filename} (${size} MB)
+    Log    Waiting ${FILEMONITOR_INTERVAL}s for FileMonitor to detect change...
+    Sleep    ${FILEMONITOR_INTERVAL}s
 
 Participant A Modifies File
     [Documentation]    Modify an existing file on participant A
@@ -338,6 +342,23 @@ Files Should Match Between Participants
 
 Both Participants Should Have All Files
     [Documentation]    Verify both participants have merged files
+    # Wait for files to propagate before checking
+    Log    Waiting for initial synchronization to complete...
+    Sleep    ${PROPAGATION_TIMEOUT}s
+    # Get expected file counts (A's files + B's files should be in both)
+    @{files_a}=    List Files In Directory    ${DIR_A}
+    @{files_b}=    List Files In Directory    ${DIR_B}
+    ${expected_count}=    Evaluate    len(@{files_a})
+    Log    Expected files from A: ${expected_count}
+    # Wait for all files from A to appear in B
+    FOR    ${file}    IN    @{files_a}
+        Wait For File To Appear    ${DIR_B}    ${file}    ${PROPAGATION_TIMEOUT}
+    END
+    # Wait for all files from B to appear in A
+    FOR    ${file}    IN    @{files_b}
+        Wait For File To Appear    ${DIR_A}    ${file}    ${PROPAGATION_TIMEOUT}
+    END
+    # Now verify counts and checksums
     ${count_a}=    Count Files In Directory    ${DIR_A}
     ${count_b}=    Count Files In Directory    ${DIR_B}
     Should Be Equal As Integers    ${count_a}    ${count_b}
@@ -346,6 +367,29 @@ Both Participants Should Have All Files
 
 All Three Participants Should Have All Files
     [Documentation]    Verify all three participants have all files
+    # Wait for files to propagate before checking
+    Log    Waiting for initial synchronization to complete...
+    Sleep    ${PROPAGATION_TIMEOUT}s
+    # Get file lists from each participant
+    @{files_a}=    List Files In Directory    ${DIR_A}
+    @{files_b}=    List Files In Directory    ${DIR_B}
+    @{files_c}=    List Files In Directory    ${DIR_C}
+    # Wait for all files from A to appear in B and C
+    FOR    ${file}    IN    @{files_a}
+        Wait For File To Appear    ${DIR_B}    ${file}    ${PROPAGATION_TIMEOUT}
+        Wait For File To Appear    ${DIR_C}    ${file}    ${PROPAGATION_TIMEOUT}
+    END
+    # Wait for all files from B to appear in A and C
+    FOR    ${file}    IN    @{files_b}
+        Wait For File To Appear    ${DIR_A}    ${file}    ${PROPAGATION_TIMEOUT}
+        Wait For File To Appear    ${DIR_C}    ${file}    ${PROPAGATION_TIMEOUT}
+    END
+    # Wait for all files from C to appear in A and B
+    FOR    ${file}    IN    @{files_c}
+        Wait For File To Appear    ${DIR_A}    ${file}    ${PROPAGATION_TIMEOUT}
+        Wait For File To Appear    ${DIR_B}    ${file}    ${PROPAGATION_TIMEOUT}
+    END
+    # Now verify counts
     ${count_a}=    Count Files In Directory    ${DIR_A}
     ${count_b}=    Count Files In Directory    ${DIR_B}
     ${count_c}=    Count Files In Directory    ${DIR_C}
