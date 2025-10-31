@@ -63,8 +63,12 @@
 - [x] T025 Create Subscriber entity in `DirShare.cpp` for receiving remote changes
 - [x] T026 Add WaitSet and StatusCondition setup for publication/subscription matching in `DirShare.cpp`
 - [x] T027 Add proper DDS cleanup sequence in `DirShare.cpp` (delete_contained_entities, delete_participant, shutdown)
+- [x] T027n [P] Create FileChangeTracker interface in `DevGuideExamples/DCPS/DirShare/FileChangeTracker.h` for notification loop prevention per FR-017 and SC-011
+- [x] T027o [P] Implement FileChangeTracker in `DevGuideExamples/DCPS/DirShare/FileChangeTracker.cpp` with thread-safe suppression flag (ACE_Thread_Mutex, std::set) per research.md Area 6
+- [x] T027p Integrate FileChangeTracker into FileMonitor.cpp check_for_changes() to suppress notifications for remotely-updated files
+- [x] T027q Integrate FileChangeTracker into FileEventListenerImpl.cpp on_data_available() to mark files before/after applying remote changes
 
-**Checkpoint**: Foundation ready - DDS infrastructure initialized, topics created, user story implementation can now begin
+**Checkpoint**: Foundation ready - DDS infrastructure initialized, topics created, notification loop prevention in place, user story implementation can now begin
 
 ### Phase 2 Testing ✅ COMPLETE (Basic custom framework)
 
@@ -104,6 +108,23 @@ mwc.pl -type gnuace tests.mpc && make
 ./FileUtilsBoostTest --log_level=all
 ./FileMonitorBoostTest --log_level=all
 ```
+
+### Phase 2 FileChangeTracker Boost.Test (Notification Loop Prevention) 🎯 NEW ✅ COMPLETE
+
+**Purpose**: Validate FileChangeTracker prevents notification loops per FR-017 and SC-011
+
+- [x] T027r [P] Create Boost.Test suite for FileChangeTracker in `DevGuideExamples/DCPS/DirShare/tests/FileChangeTrackerBoostTest.cpp`
+- [x] T027s [P] Add Boost.Test cases for suppression flag set/clear operations in `tests/FileChangeTrackerBoostTest.cpp`
+- [x] T027t [P] Add Boost.Test cases for thread-safety (concurrent suppress/resume/is_suppressed calls) in `tests/FileChangeTrackerBoostTest.cpp`
+- [x] T027u [P] Add Boost.Test cases for multiple file tracking (suppress A, suppress B, resume A, verify B still suppressed) in `tests/FileChangeTrackerBoostTest.cpp`
+- [x] T027v [P] Add Boost.Test cases for FileMonitor integration (verify notifications suppressed for tracked files) in `tests/FileChangeTrackerBoostTest.cpp`
+- [x] T027w [P] Update tests.mpc with FileChangeTrackerBoostTest executable in `tests/tests.mpc`
+
+**Test Coverage** (FileChangeTracker):
+- Thread-safety: Concurrent access from multiple threads
+- State management: Suppress/resume/query operations
+- Integration: FileMonitor respects suppression flags
+- Edge cases: Multiple files, rapid changes, error handling
 
 ---
 
@@ -175,6 +196,8 @@ mwc.pl -type gnuace tests.mpc && make
 - [X] T069 [US2] Connect FileEvent CREATE to FileContent/FileChunk request logic
 - [X] T070 [US2] Add validation that file doesn't already exist locally before writing in FileEventListenerImpl
 - [X] T071 [US2] Add ACE logging for file creation events (detected, published, received, applied)
+- [ ] T071a [US2] Update FileEvent CREATE handling to use FileChangeTracker suppression (call suppress_notifications before applying, resume after)
+- [ ] T071b [US2] Update FileMonitor CREATE publishing to check FileChangeTracker.is_suppressed() before publishing FileEvent
 
 ### Boost.Test Unit Tests for User Story 2 🎯 NEW ✅ COMPLETE
 
@@ -186,8 +209,9 @@ mwc.pl -type gnuace tests.mpc && make
 - [X] T077 [P] [US2] Create Boost.Test suite for FileMonitor CREATE detection in `tests/FileMonitorCreateBoostTest.cpp`
 - [X] T078 [P] [US2] Add Boost.Test cases for scan state comparison in `tests/FileMonitorCreateBoostTest.cpp`
 - [X] T079 [US2] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+- [ ] T079a [P] [US2] Add Boost.Test cases for notification loop prevention in CREATE flow in `tests/FileEventCreateBoostTest.cpp` (verify remote changes don't republish)
 
-**Checkpoint**: Real-time file creation working with comprehensive Boost.Test coverage
+**Checkpoint**: Real-time file creation working with comprehensive Boost.Test coverage including notification loop prevention (SC-011)
 
 ---
 
@@ -206,6 +230,8 @@ mwc.pl -type gnuace tests.mpc && make
 - [X] T084 [US3] Add logic to overwrite local file only if remote timestamp is newer in FileEventListenerImpl
 - [X] T085 [US3] Add ACE logging for modification events with timestamp comparisons
 - [X] T086 [US3] Add instrumentation to verify only modified files are transferred (not all files)
+- [ ] T086a [US3] Update FileEvent MODIFY handling to use FileChangeTracker suppression (call suppress_notifications before applying, resume after)
+- [ ] T086b [US3] Update FileMonitor MODIFY publishing to check FileChangeTracker.is_suppressed() before publishing FileEvent
 
 ### Boost.Test Unit Tests for User Story 3 🎯 NEW ✅ COMPLETE
 
@@ -217,8 +243,9 @@ mwc.pl -type gnuace tests.mpc && make
 - [X] T092 [P] [US3] Add Boost.Test cases for DDS source_timestamp extraction in `tests/TimestampComparisonBoostTest.cpp`
 - [X] T093 [P] [US3] Add Boost.Test cases for efficiency verification (only modified files) in `tests/FileEventModifyBoostTest.cpp`
 - [X] T094 [US3] Update tests.mpc with new Boost.Test executables in `tests/tests.mpc`
+- [ ] T094a [P] [US3] Add Boost.Test cases for notification loop prevention in MODIFY flow in `tests/FileEventModifyBoostTest.cpp` (verify remote changes don't republish)
 
-**Checkpoint**: File modification propagation working with comprehensive Boost.Test coverage
+**Checkpoint**: File modification propagation working with comprehensive Boost.Test coverage including notification loop prevention (SC-011)
 
 ---
 
@@ -321,6 +348,7 @@ mwc.pl -type gnuace tests.mpc && make
 - [ ] T137 [P] Add test scenario for file deletion (create, sync, delete, verify deletion propagates)
 - [ ] T137a [P] Add test scenario for special characters in filenames (spaces, Unicode, special symbols per FR-015)
 - [ ] T137b [P] Add test scenario for error conditions (disk full simulation, permission denied, file locked per FR-016)
+- [ ] T137c [P] Add test scenario for notification loop prevention (SC-011: verify Machine B receiving file from A doesn't send duplicate event back to A)
 
 ### Additional Boost.Test Suites 🎯 NEW
 
@@ -365,12 +393,13 @@ mwc.pl -type gnuace tests.mpc && make
 - [ ] T170 [P] Add Robot test for US4: Real-Time File Deletion Propagation (3 scenarios)
 - [ ] T171 [P] Add Robot test for US5: Concurrent Modification Conflict Resolution (3 scenarios)
 - [ ] T172 [P] Add Robot test for US6: Metadata Transfer and Preservation (3 scenarios)
-- [ ] T173 Create PerformanceTests.robot test suite for Success Criteria SC-001 to SC-010
+- [ ] T173 Create PerformanceTests.robot test suite for Success Criteria SC-001 to SC-011
 - [ ] T174 [P] Add Robot test for SC-001: Initial sync of 100 files within 30 seconds
 - [ ] T175 [P] Add Robot test for SC-002: File creation propagation within 5 seconds
 - [ ] T176 [P] Add Robot test for SC-003: File modification propagation within 5 seconds
 - [ ] T177 [P] Add Robot test for SC-004: Bandwidth efficiency (80% reduction measurement)
 - [ ] T178 [P] Add Robot test for SC-006: 10+ simultaneous participants performance
+- [ ] T178a [P] Add Robot test for SC-011: Notification loop prevention (zero duplicate FileEvent notifications)
 - [ ] T179 Create EdgeCaseTests.robot test suite for edge cases from spec.md
 - [ ] T180 [P] Add Robot test for network connection loss during file transfer
 - [ ] T181 [P] Add Robot test for insufficient disk space scenario
@@ -550,30 +579,30 @@ perl run_test.pl --rtps
 
 ## Task Summary
 
-**Total Tasks**: 195 (updated: +28 Robot Framework acceptance tests for comprehensive end-to-end validation)
+**Total Tasks**: 213 (updated: +18 tasks for SC-011 notification loop prevention including FileChangeTracker component, integration with US2/US3, unit tests, integration test, and Robot acceptance test)
 
 **Tasks by Phase**:
 - Phase 1 (Setup): 6 tasks ✅ COMPLETE
-- Phase 2 (Foundational): 21 tasks ✅ COMPLETE
-- Phase 2 Boost.Test Migration: 6 tasks 🎯 NEW
+- Phase 2 (Foundational): 25 tasks (21 core + 4 FileChangeTracker for SC-011) ✅ CORE COMPLETE, 4 SC-011 tasks pending
+- Phase 2 Boost.Test Migration: 12 tasks (6 original + 6 FileChangeTracker for SC-011) 🎯 6 COMPLETE, 6 SC-011 pending
 - Phase 3 (US1 - Initial Sync): 34 tasks (22 impl + 12 Boost.Test)
-- Phase 4 (US2 - File Creation): 18 tasks (10 impl + 8 Boost.Test)
-- Phase 5 (US3 - File Modification): 15 tasks (7 impl + 8 Boost.Test)
+- Phase 4 (US2 - File Creation): 21 tasks (12 impl including 2 SC-011 + 9 Boost.Test including 1 SC-011)
+- Phase 5 (US3 - File Modification): 18 tasks (9 impl including 2 SC-011 + 9 Boost.Test including 1 SC-011)
 - Phase 6 (US4 - File Deletion): 13 tasks (6 impl + 7 Boost.Test)
 - Phase 7 (US5 - Conflict Resolution): 11 tasks (5 impl + 6 Boost.Test)
 - Phase 8 (US6 - Metadata Preservation): 13 tasks (7 impl + 6 Boost.Test)
-- Phase 9 (Polish): 64 tasks (20 app polish + 10 Boost.Test suites + 28 Robot Framework tests + 6 validation)
+- Phase 9 (Polish): 66 tasks (20 app polish + 10 Boost.Test suites + 29 Robot Framework tests including 1 SC-011 + 1 integration test for SC-011 + 6 validation)
 
 **Boost.Test Tasks Summary**:
-- Phase 2 Migration: 6 tasks
+- Phase 2 Migration: 12 tasks (6 original + 6 FileChangeTracker for SC-011)
 - User Story 1: 12 Boost.Test tasks
-- User Story 2: 8 Boost.Test tasks
-- User Story 3: 8 Boost.Test tasks
+- User Story 2: 9 Boost.Test tasks (8 original + 1 SC-011)
+- User Story 3: 9 Boost.Test tasks (8 original + 1 SC-011)
 - User Story 4: 7 Boost.Test tasks
 - User Story 5: 6 Boost.Test tasks
 - User Story 6: 6 Boost.Test tasks
 - Phase 9 Additional: 10 Boost.Test tasks
-- **Total Boost.Test Tasks: 63** 🎯
+- **Total Boost.Test Tasks: 71** 🎯 (including 8 new tasks for SC-011)
 
 **Test Coverage Goals**:
 - 100% of utility functions covered by Boost.Test unit tests

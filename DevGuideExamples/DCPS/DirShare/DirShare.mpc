@@ -20,6 +20,7 @@ project(*lib): dcpslib, dcps_tcp, dcps_rtps_udp {
 
   Source_Files {
     FileMonitor.cpp
+    FileChangeTracker.cpp
     Checksum.cpp
     FileUtils.cpp
     SnapshotListenerImpl.cpp
@@ -30,6 +31,7 @@ project(*lib): dcpslib, dcps_tcp, dcps_rtps_udp {
 
   Header_Files {
     FileMonitor.h
+    FileChangeTracker.h
     Checksum.h
     FileUtils.h
     SnapshotListenerImpl.h

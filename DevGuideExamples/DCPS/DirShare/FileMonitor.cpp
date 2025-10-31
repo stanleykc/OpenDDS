@@ -6,8 +6,12 @@
 
 namespace DirShare {
 
-FileMonitor::FileMonitor(const std::string& directory_path, bool fail_silently)
+FileMonitor::FileMonitor(const std::string& directory_path,
+                         FileChangeTracker& change_tracker,
+                         bool fail_silently)
   : directory_path_(directory_path)
+  , fail_silently_(fail_silently)
+  , change_tracker_(change_tracker)
 {
   // Verify directory exists
   if (!is_directory(directory_path_)) {
@@ -70,6 +74,15 @@ bool FileMonitor::scan_for_changes(
        it != current_state.end(); ++it) {
     const std::string& filename = it->first;
     const FileState& current = it->second;
+
+    // SC-011: Check if notifications are suppressed for this file
+    // If true, this change came from a remote source and should NOT be republished
+    if (change_tracker_.is_suppressed(filename)) {
+      ACE_DEBUG((LM_DEBUG,
+                ACE_TEXT("FileMonitor: Skipping suppressed file '%C' (remote update in progress)\n"),
+                filename.c_str()));
+      continue;  // Skip this file - it's being updated from remote
+    }
 
     std::map<std::string, FileState>::const_iterator prev_it = previous_state_.find(filename);
     if (prev_it == previous_state_.end()) {

@@ -136,9 +136,10 @@ module DirShare {
 - `metadata`: File properties (empty/invalid for DELETE operations)
 
 **Usage**:
-- Published when local file system change is detected
+- Published when local file system change is detected (but NOT when applying remote changes to prevent loops)
 - Subscribed by all participants to apply remote changes
 - Triggers `FileContent` or `FileChunk` transfer for CREATE/MODIFY operations
+- Implementation must distinguish locally-initiated changes from remotely-received changes (FR-017, SC-011)
 
 **Validation Rules**:
 - `filename` MUST NOT be empty

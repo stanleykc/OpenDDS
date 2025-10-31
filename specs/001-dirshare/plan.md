@@ -7,7 +7,7 @@
 
 ## Summary
 
-DirShare is a distributed file synchronization example demonstrating OpenDDS publish-subscribe patterns for real-time file sharing between multiple participants. The system enables automatic bidirectional synchronization of files in a shared directory across network-connected machines, using DDS topics to propagate file creation, modification, and deletion events. The implementation follows OpenDDS DevGuideExamples conventions with dual discovery support (InfoRepo and RTPS), comprehensive testing, and proper DDS lifecycle management.
+DirShare is a distributed file synchronization example demonstrating OpenDDS publish-subscribe patterns for real-time file sharing between multiple participants. The system enables automatic bidirectional synchronization of files in a shared directory across network-connected machines, using DDS topics to propagate file creation, modification, and deletion events. A key design consideration is distinguishing locally-initiated changes from remotely-received changes to prevent notification loops where participants republish changes they received from others. The implementation follows OpenDDS DevGuideExamples conventions with dual discovery support (InfoRepo and RTPS), comprehensive testing, and proper DDS lifecycle management.
 
 ## Technical Context
 

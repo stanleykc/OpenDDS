@@ -36,6 +36,7 @@ During an active sharing session, when a user creates a new file in the shared d
 1. **Given** an active sharing session between Machine A and Machine B, **When** a user creates a new file "document.txt" in Machine A's shared directory, **Then** the file appears in Machine B's shared directory within 5 seconds with identical content
 2. **Given** an active sharing session with 3 participants (A, B, C), **When** Machine A creates a new file, **Then** both Machine B and Machine C receive the file
 3. **Given** an active sharing session, **When** a user creates a large file (100MB) in the shared directory, **Then** the file is transferred completely and verifiable via checksum
+4. **Given** an active sharing session between Machine A and Machine B, **When** Machine A creates a file and Machine B receives and applies the change, **Then** Machine B does NOT send a new FileEvent notification back to Machine A (preventing notification loops)
 
 ---
 
@@ -52,6 +53,7 @@ During an active sharing session, when a user modifies an existing file in the s
 1. **Given** an active sharing session with a synchronized file "data.txt", **When** a user modifies "data.txt" on Machine A, **Then** only "data.txt" is retransmitted to Machine B (not other unchanged files)
 2. **Given** an active sharing session with 10 files, **When** a user modifies 1 file, **Then** network transfer occurs only for that 1 file
 3. **Given** an active sharing session, **When** a file is modified on Machine A at timestamp T1, **Then** Machine B receives the updated file with the modification timestamp preserved
+4. **Given** an active sharing session, **When** Machine A modifies a file and Machine B receives and applies the modification, **Then** Machine B does NOT publish this change (preventing notification loops and additional unnecessary propagation)
 
 ---
 
@@ -178,6 +180,7 @@ When files are transferred between participants, their metadata (filename, size,
 - **SC-008**: System handles at least 1000 file operations (create, modify, delete) during a session without memory leaks or crashes
 - **SC-009**: Users can successfully share files with names containing Unicode characters and special symbols without corruption
 - **SC-010**: System operates correctly with both RTPS and InfoRepo discovery mechanisms, passing all test scenarios in both modes
+- **SC-011**: System prevents notification loops - when changes are propagated from a source to participants, zero duplicate FileEvent notifications are sent back to the originator (measurable via DDS traffic monitoring or debug logging)
 
 ## Assumptions *(mandatory)*
 

@@ -2,6 +2,7 @@
 #define DIRSHARE_FILEEVENTLISTENERIMPL_H
 
 #include "DirShareTypeSupportImpl.h"
+#include "FileChangeTracker.h"
 #include <dds/DdsDcpsSubscriptionC.h>
 #include <dds/DCPS/LocalObject.h>
 #include <string>
@@ -11,6 +12,7 @@ namespace DirShare {
 /**
  * FileEventListenerImpl: Listener for FileEvent topic
  * Handles CREATE, MODIFY, and DELETE events from remote participants
+ * Integrates with FileChangeTracker to prevent notification loops (SC-011)
  */
 class FileEventListenerImpl
   : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener>
@@ -21,10 +23,12 @@ public:
    * @param shared_directory Path to the shared directory
    * @param content_writer DataWriter for requesting FileContent
    * @param chunk_writer DataWriter for requesting FileChunks
+   * @param change_tracker Reference to FileChangeTracker for loop prevention
    */
   FileEventListenerImpl(const std::string& shared_directory,
                         DDS::DataWriter_ptr content_writer,
-                        DDS::DataWriter_ptr chunk_writer);
+                        DDS::DataWriter_ptr chunk_writer,
+                        FileChangeTracker& change_tracker);
 
   virtual ~FileEventListenerImpl();
 
@@ -59,6 +63,7 @@ private:
   std::string shared_directory_;
   DDS::DataWriter_var content_writer_;
   DDS::DataWriter_var chunk_writer_;
+  FileChangeTracker& change_tracker_;  // Reference to shared tracker for loop prevention
 
   /**
    * Handle CREATE event - trigger file transfer

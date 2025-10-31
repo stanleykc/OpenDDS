@@ -277,6 +277,115 @@ bool verify_file_integrity(const std::string& filename, unsigned long expected_c
 
 ---
 
+## Research Area 6: Notification Loop Prevention
+
+### Decision: Change Source Tracking with Suppression Flag
+
+**Rationale**:
+- **Loop prevention**: When a participant receives a file change from DDS and applies it locally, the local file monitor will detect the change but must not republish it
+- **DDS pub-sub pattern**: Each participant is both publisher and subscriber, creating potential for feedback loops
+- **Simplicity**: Use a simple state flag to track whether the current file operation is locally-initiated vs remotely-received
+- **Race conditions**: Must handle asynchronous file monitoring and DDS callbacks safely
+
+**Implementation Approach**:
+
+```cpp
+// In DirShare main class or FileMonitor
+class FileChangeTracker {
+private:
+  std::set<std::string> suppressed_paths_;  // Files being updated from remote
+  ACE_Thread_Mutex mutex_;                   // Thread-safe access
+
+public:
+  // Called before applying remote change
+  void suppress_notifications(const std::string& path) {
+    ACE_Guard<ACE_Thread_Mutex> guard(mutex_);
+    suppressed_paths_.insert(path);
+  }
+
+  // Called after remote change is applied
+  void resume_notifications(const std::string& path) {
+    ACE_Guard<ACE_Thread_Mutex> guard(mutex_);
+    suppressed_paths_.erase(path);
+  }
+
+  // Check if notifications should be suppressed
+  bool is_suppressed(const std::string& path) const {
+    ACE_Guard<ACE_Thread_Mutex> guard(mutex_);
+    return suppressed_paths_.find(path) != suppressed_paths_.end();
+  }
+};
+
+// In FileEventListenerImpl::on_data_available()
+void FileEventListenerImpl::on_data_available(DDS::DataReader_ptr reader) {
+  FileEvent event;
+  DDS::SampleInfo info;
+
+  if (reader->take_next_sample(event, info) == DDS::RETCODE_OK) {
+    if (info.valid_data) {
+      // Mark this file as being updated from remote source
+      change_tracker_.suppress_notifications(event.filename);
+
+      // Apply the file change locally
+      applyFileChange(event);
+
+      // Resume notifications for this file
+      change_tracker_.resume_notifications(event.filename);
+    }
+  }
+}
+
+// In FileMonitor polling loop
+void FileMonitor::check_for_changes() {
+  for (auto& file_entry : current_files_) {
+    if (has_changed(file_entry)) {
+      // Only publish if this change is NOT from a remote update
+      if (!change_tracker_.is_suppressed(file_entry.path)) {
+        publish_file_event(file_entry);
+      } else {
+        ACE_DEBUG((LM_DEBUG, "Suppressing notification for remotely-updated file: %C\n",
+                  file_entry.path.c_str()));
+      }
+    }
+  }
+}
+```
+
+**Timing Considerations**:
+- Suppress notifications BEFORE applying the file change
+- Resume notifications AFTER the file change completes
+- Use mutex/lock to handle concurrent DDS callbacks and file monitor polling
+- Consider brief delay (e.g., 100ms) after resuming to allow filesystem to settle
+
+**Edge Cases Handled**:
+- User modifies file while remote update is in progress: Timestamp-based conflict resolution handles this (see Research Area 3)
+- Rapid successive remote updates: Each update goes through suppress/resume cycle
+- Multiple participants: Each participant independently tracks its own suppressed files
+- Filesystem delays: File monitor polling interval (1-2 sec) provides natural buffer
+
+**Alternatives Considered**:
+
+| Approach | Pros | Cons | Why Rejected |
+|----------|------|------|--------------|
+| Timestamp comparison only | No state tracking needed | Can't distinguish source of change | Local FS modification time updated when applying remote change |
+| Ignore own published events | Simpler | DDS doesn't tag events by source participant | Would require custom participant identification |
+| Temporary file then rename | Atomic operation | More complex filesystem operations | Breaks metadata preservation |
+| Disable file monitor during updates | Complete suppression | Might miss local changes | Too coarse-grained |
+
+**Testing Strategy**:
+- Unit test: Verify suppression flag set/cleared correctly
+- Integration test: Two participants, verify change propagates exactly once (A→B, not B→A)
+- Acceptance test: Monitor DDS traffic, confirm zero duplicate FileEvent publications for same change
+- Load test: Multiple rapid changes, verify no notification storms
+
+**References**:
+- ACE threading primitives: `ACE_Thread_Mutex`, `ACE_Guard`
+- OpenDDS samples: `DDS::SampleInfo` contains source information
+- FR-017 (spec.md): Distinguishing locally-initiated vs remotely-received changes
+- SC-011 (spec.md): Zero duplicate FileEvent notifications to originator
+
+---
+
 ## Summary of Technical Decisions
 
 | Area | Decision | Rationale |
@@ -286,6 +395,7 @@ bool verify_file_integrity(const std::string& filename, unsigned long expected_c
 | Conflict Resolution | DDS timestamp comparison (millisecond precision) | Deterministic, leverages DDS built-in timestamps |
 | Message Sizing | 1MB chunks, 16MB transport max | Efficient, within OpenDDS defaults |
 | Integrity Verification | CRC32 checksum | Fast, sufficient, industry standard |
+| Loop Prevention | Suppression flag with mutex-protected state | Thread-safe, simple, prevents duplicate notifications |
 
 **No Unresolved Issues**: All technical unknowns from Technical Context have been researched and decided.
 

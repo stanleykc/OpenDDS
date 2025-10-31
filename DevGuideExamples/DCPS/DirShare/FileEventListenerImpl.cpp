@@ -8,10 +8,12 @@ namespace DirShare {
 FileEventListenerImpl::FileEventListenerImpl(
   const std::string& shared_directory,
   DDS::DataWriter_ptr content_writer,
-  DDS::DataWriter_ptr chunk_writer)
+  DDS::DataWriter_ptr chunk_writer,
+  FileChangeTracker& change_tracker)
   : shared_directory_(shared_directory)
   , content_writer_(DDS::DataWriter::_duplicate(content_writer))
   , chunk_writer_(DDS::DataWriter::_duplicate(chunk_writer))
+  , change_tracker_(change_tracker)
 {
 }
 

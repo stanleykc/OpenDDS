@@ -65,7 +65,11 @@ DDS::ReturnCode_t ret = reader->take_next_sample(event, info);
 if (ret == DDS::RETCODE_OK && info.valid_data) {
   // Check source timestamp for conflict resolution
   if (compareTimestamps(info.source_timestamp, getLocalModTime(event.filename)) > 0) {
+    // IMPORTANT: Suppress notifications before applying remote change
+    // to prevent notification loops (FR-017, SC-011)
+    change_tracker_.suppress_notifications(event.filename);
     applyFileOperation(event);
+    change_tracker_.resume_notifications(event.filename);
   }
 }
 ```

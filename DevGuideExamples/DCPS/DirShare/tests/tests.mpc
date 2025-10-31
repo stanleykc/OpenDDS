@@ -66,6 +66,27 @@ project(*FileMonitorBoostTest): aceexe, dcps {
   // No additional libs needed with included/unit_test.hpp
 }
 
+project(*FileChangeTrackerBoostTest): aceexe, dcps {
+  exename = FileChangeTrackerBoostTest
+  after  += DirShare_lib
+
+  libs += DirShare
+  libpaths += ..
+
+  includes += /opt/homebrew/include
+
+  Source_Files {
+    FileChangeTrackerBoostTest.cpp
+  }
+
+  Header_Files {
+  }
+
+  // Boost.Test configuration for SC-011 notification loop prevention
+  // Note: Boost.Test is header-only with BOOST_TEST_INCLUDED
+  // No additional libs needed with included/unit_test.hpp
+}
+
 // User Story 1 Boost.Test suites
 
 project(*DirectorySnapshotBoostTest): aceexe, dcps {

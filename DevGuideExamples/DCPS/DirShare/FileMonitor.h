@@ -2,6 +2,7 @@
 #define DIRSHARE_FILEMONITOR_H
 
 #include "DirShareTypeSupportImpl.h"
+#include "FileChangeTracker.h"
 #include <ace/Thread_Mutex.h>
 #include <map>
 #include <string>
@@ -11,14 +12,18 @@ namespace DirShare {
 /**
  * FileMonitor: Monitors a directory for file system changes
  * Uses polling-based approach (1-2 second intervals) for cross-platform simplicity
+ * Integrates with FileChangeTracker to prevent notification loops (SC-011)
  */
 class FileMonitor {
 public:
   /**
    * Constructor
    * @param directory_path Path to the directory to monitor
+   * @param change_tracker Reference to FileChangeTracker for loop prevention
+   * @param fail_silently Whether to fail silently on errors
    */
   explicit FileMonitor(const std::string& directory_path,
+                       FileChangeTracker& change_tracker,
                        bool fail_silently = false);
 
   /**
@@ -69,6 +74,7 @@ private:
   bool fail_silently_;
   std::map<std::string, FileState> previous_state_;
   ACE_Thread_Mutex mutex_;
+  FileChangeTracker& change_tracker_;  // Reference to shared tracker for loop prevention
 
   /**
    * Build full path from relative filename

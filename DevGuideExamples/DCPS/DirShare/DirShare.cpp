@@ -1,5 +1,6 @@
 #include "DirShareTypeSupportImpl.h"
 #include "FileMonitor.h"
+#include "FileChangeTracker.h"
 #include "FileUtils.h"
 #include "Checksum.h"
 #include "SnapshotListenerImpl.h"
@@ -338,9 +339,12 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
     DirShare::FileChunkDataWriter_var typed_chunk_writer =
       DirShare::FileChunkDataWriter::_narrow(chunk_writer);
 
+    // Create FileChangeTracker for notification loop prevention (SC-011)
+    DirShare::FileChangeTracker change_tracker;
+
     // Create listeners for receiving data
     DDS::DataReaderListener_var event_listener =
-      new DirShare::FileEventListenerImpl(g_shared_directory, content_writer, chunk_writer);
+      new DirShare::FileEventListenerImpl(g_shared_directory, content_writer, chunk_writer, change_tracker);
     DDS::DataReaderListener_var snapshot_listener =
       new DirShare::SnapshotListenerImpl(g_shared_directory, content_writer, chunk_writer);
     DDS::DataReaderListener_var content_listener =
@@ -416,7 +420,7 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
     }
 
     // Create FileMonitor for directory scanning
-    DirShare::FileMonitor monitor(g_shared_directory);
+    DirShare::FileMonitor monitor(g_shared_directory, change_tracker);
 
     // Generate and publish initial directory snapshot
     ACE_DEBUG((LM_INFO,
