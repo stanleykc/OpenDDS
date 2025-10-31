@@ -2,6 +2,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "../FileMonitor.h"
+#include "../FileChangeTracker.h"
 #include "../FileUtils.h"
 #include <ace/OS_NS_unistd.h>
 #include <ace/OS_NS_sys_stat.h>
@@ -11,6 +12,8 @@
 
 // Test fixture for directory cleanup
 struct FileMonitorTestFixture {
+  DirShare::FileChangeTracker change_tracker;  // Shared tracker for all tests
+
   void cleanup_directory(const char* dir) {
     std::vector<std::string> files;
     if (DirShare::list_directory_files(dir, files)) {
@@ -31,7 +34,7 @@ BOOST_AUTO_TEST_CASE(test_detect_file_creation)
   const char* test_dir = "test_monitor_create_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan (empty directory)
   std::vector<std::string> created, modified, deleted;
@@ -66,7 +69,7 @@ BOOST_AUTO_TEST_CASE(test_detect_file_modification)
   file << "initial content";
   file.close();
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan (establish baseline)
   std::vector<std::string> created, modified, deleted;
@@ -103,7 +106,7 @@ BOOST_AUTO_TEST_CASE(test_detect_file_deletion)
   file << "to be deleted";
   file.close();
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan (establish baseline)
   std::vector<std::string> created, modified, deleted;
@@ -135,7 +138,7 @@ BOOST_AUTO_TEST_CASE(test_detect_multiple_changes)
   std::ofstream(file1.c_str()) << "file1 content";
   std::ofstream(file2.c_str()) << "file2 content";
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan
   std::vector<std::string> created, modified, deleted;
@@ -178,7 +181,7 @@ BOOST_AUTO_TEST_CASE(test_get_all_files)
   std::ofstream(file1.c_str()) << "test1";
   std::ofstream(file2.c_str()) << "test2";
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Get all files
   std::vector<DirShare::FileMetadata> files = monitor.get_all_files();
@@ -210,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_get_file_metadata)
   file.write(content, strlen(content));
   file.close();
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Get file metadata
   DirShare::FileMetadata metadata;
@@ -231,7 +234,7 @@ BOOST_AUTO_TEST_CASE(test_nonexistent_directory)
   const char* test_dir = "nonexistent_dir_boost_12345";
 
   // Constructor should handle nonexistent directory gracefully
-  DirShare::FileMonitor monitor(test_dir, true); // fail_silently = true
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true); // fail_silently = true
 
   // Scan should fail gracefully
   std::vector<std::string> created, modified, deleted;
@@ -245,7 +248,7 @@ BOOST_AUTO_TEST_CASE(test_empty_directory)
   const char* test_dir = "test_monitor_empty_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Multiple scans of empty directory should work
   std::vector<std::string> created, modified, deleted;
@@ -266,7 +269,7 @@ BOOST_AUTO_TEST_CASE(test_rapid_scans)
   const char* test_dir = "test_monitor_rapid_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Create file
   std::string test_file = std::string(test_dir) + "/rapid_test.txt";

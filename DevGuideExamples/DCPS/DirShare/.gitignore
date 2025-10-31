@@ -1,0 +1,52 @@
+# IDL compiler generated files
+# IDL compiler generated files
+*TypeSupport.idl
+*TypeSupportImpl.h
+*TypeSupportImpl.cpp
+*C.h
+*C.cpp
+*C.inl
+*S.h
+*S.cpp
+*S.inl
+*_export.h
+
+# Main application executable
+/dirshare
+
+# Shared library (additional patterns)
+/libDirShare.so
+/libDirShare.so.*
+/libDirShare.dylib
+/libDirShare.a
+
+# Test executables
+/tests/ChecksumBoostTest
+/tests/FileUtilsBoostTest
+/tests/FileMonitorBoostTest
+/tests/FileChangeTrackerBoostTest
+/tests/DirectorySnapshotBoostTest
+/tests/FileContentBoostTest
+/tests/FileChunkBoostTest
+/tests/FileEventCreateBoostTest
+/tests/FileMonitorCreateBoostTest
+/tests/FileEventModifyBoostTest
+/tests/TimestampComparisonBoostTest
+
+# Test-generated directories and files
+/tests/test_phase4_dir1/
+/tests/test_phase4_dir2/
+/tests/test_*/
+
+# Build artifacts (additional to root .gitignore)
+*.o
+.obj/
+.shobj/
+.depend.*
+GNUmakefile*
+
+# Temporary and log files
+*.log
+*.ior
+core
+core.*

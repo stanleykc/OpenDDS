@@ -3,6 +3,7 @@
 
 #include "../FileEventListenerImpl.h"
 #include "../FileMonitor.h"
+#include "../FileChangeTracker.h"
 #include "../FileUtils.h"
 #include "../Checksum.h"
 #include "../DirShareTypeSupportImpl.h"
@@ -87,7 +88,9 @@ BOOST_AUTO_TEST_CASE(test_modification_detection)
   create_file("detect.txt", "initial content");
 
   // Create FileMonitor and do initial scan
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   std::vector<std::string> created, modified, deleted;
 
   // Initial scan - should detect file as created
@@ -112,7 +115,10 @@ BOOST_AUTO_TEST_CASE(test_modification_size_change)
 {
   create_file("size_change.txt", "short");
 
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   std::vector<std::string> created, modified, deleted;
 
   // Initial scan
@@ -132,7 +138,10 @@ BOOST_AUTO_TEST_CASE(test_modification_timestamp_change)
 {
   create_file("timestamp_test.txt", "content");
 
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   std::vector<std::string> created, modified, deleted;
 
   // Initial scan
@@ -157,7 +166,10 @@ BOOST_AUTO_TEST_CASE(test_modification_checksum_change)
 {
   create_file("checksum_test.txt", "original checksum");
 
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   std::vector<std::string> created, modified, deleted;
 
   // Initial scan
@@ -179,7 +191,9 @@ BOOST_AUTO_TEST_CASE(test_modify_event_publishing)
   modify_file("publish_test.txt", "v2 modified");
 
   // Get file metadata for MODIFY event
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   DirShare::FileMetadata metadata;
   bool success = monitor.get_file_metadata("publish_test.txt", metadata);
 
@@ -208,7 +222,10 @@ BOOST_AUTO_TEST_CASE(test_efficiency_only_modified_files)
   create_file("file2.txt", "content 2");
   create_file("file3.txt", "content 3");
 
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   std::vector<std::string> created, modified, deleted;
 
   // Initial scan
@@ -231,7 +248,10 @@ BOOST_AUTO_TEST_CASE(test_sequential_modifications)
 {
   create_file("sequential.txt", "version 1");
 
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
   std::vector<std::string> created, modified, deleted;
 
   // Initial scan
@@ -258,7 +278,10 @@ BOOST_AUTO_TEST_CASE(test_metadata_updates_after_modification)
 {
   create_file("metadata_update.txt", "before");
 
-  DirShare::FileMonitor monitor(test_dir, true);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker, true);
 
   // Get initial metadata
   DirShare::FileMetadata metadata_before;

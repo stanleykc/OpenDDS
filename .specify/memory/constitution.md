@@ -1,21 +1,15 @@
 <!--
-Sync Impact Report - 2025-10-30
+Sync Impact Report - 2025-10-31
 
-Version Change: [INITIAL] → 1.0.0
-Type: MINOR - Initial constitution creation for OpenDDS examples
+Version Change: 1.0.0 → 1.1.0
+Type: MINOR - Added Version Control Hygiene principle
 
 Modified Principles:
-- NEW: I. IDL-First Design
-- NEW: II. Dual Discovery/Transport Support
-- NEW: III. Complete DDS Lifecycle
-- NEW: IV. Test-Driven Validation
-- NEW: V. Standard Project Structure
+- V. Standard Project Structure - Added `.gitignore` requirement
+- NEW: VI. Version Control Hygiene - Comprehensive .gitignore requirements
 
 Added Sections:
-- Core Principles (5 principles)
-- Build System Requirements
-- Testing Requirements
-- Governance
+- Version Control Hygiene principle with detailed .gitignore patterns
 
 Templates Requiring Updates:
 ✅ plan-template.md - Constitution Check section compatible
@@ -23,6 +17,11 @@ Templates Requiring Updates:
 ✅ tasks-template.md - Task organization compatible
 
 Follow-up TODOs: None
+
+Previous Sync Report - 2025-10-30:
+Version Change: [INITIAL] → 1.0.0
+Type: MINOR - Initial constitution creation for OpenDDS examples
+Modified Principles: I-V (IDL-First, Dual Discovery, Complete DDS Lifecycle, Test-Driven Validation, Standard Project Structure)
 -->
 
 # OpenDDS Example Constitution
@@ -108,8 +107,39 @@ Examples MUST follow consistent file organization and build system patterns for 
 - **Test**: `run_test.pl` - Perl test launcher
 - **Config**: `rtps.ini` - RTPS discovery/transport configuration
 - **Docs**: `README.md` - Brief description, build instructions, run instructions
+- **Git Ignore**: `.gitignore` - Ignore patterns for generated files and binaries (see requirements below)
 
 **Rationale**: Consistency enables developers to quickly understand any example, copy patterns to new projects, and switch between build systems. Standard structure supports documentation generation and automated testing.
+
+### VI. Version Control Hygiene
+
+Examples MUST maintain clean version control by excluding generated files, build artifacts, and binary outputs from git tracking.
+
+**Requirements**:
+- Every example directory MUST include a `.gitignore` file
+- `.gitignore` MUST ignore all IDL compiler-generated files:
+  - `*TypeSupportImpl.cpp`, `*TypeSupportImpl.h`
+  - `*TypeSupport.idl`
+  - `*C.{h,cpp,inl}`, `*S.{h,cpp,inl}`
+  - `*TypeSupportC.{h,cpp,inl}`, `*TypeSupportS.{h,cpp,inl}`
+- `.gitignore` MUST ignore all executable and library outputs:
+  - Application executables (by name, e.g., `/publisher`, `/subscriber`, `/dirshare`)
+  - Shared libraries (`lib*.so`, `lib*.so.*`, `lib*.dylib`, `lib*.a`)
+  - Test executables (e.g., `/tests/*BoostTest`, `/tests/*Test`)
+- `.gitignore` MUST ignore build artifacts:
+  - Object files (`*.o`)
+  - Build directories (`.obj/`, `.shobj/`)
+  - Dependency files (`.depend.*`)
+  - Generated makefiles (`GNUmakefile*`)
+- `.gitignore` MUST ignore temporary and test-generated files:
+  - Log files (`*.log`)
+  - IOR files (`*.ior`)
+  - Core dumps (`core`, `core.*`)
+  - Test directories (`test_*/`)
+- When adding new executables or libraries, `.gitignore` MUST be updated BEFORE committing code
+- Never commit binary executables, shared libraries, or IDL-generated code to the repository
+
+**Rationale**: Generated files and binaries should not be version-controlled as they are build artifacts that vary by platform, configuration, and OpenDDS version. Tracking them causes merge conflicts, bloats repository size, and creates confusion about source-of-truth. Clean version control ensures examples remain portable and maintainable across different development environments.
 
 ## Build System Requirements
 
@@ -184,4 +214,4 @@ This constitution defines the standards for OpenDDS examples in the `DevGuideExa
 - Reviewers verify: IDL-first design, dual discovery support, complete lifecycle, test coverage, standard structure
 - Complexity not justified by teaching value MUST be simplified
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-30 | **Last Amended**: 2025-10-30
+**Version**: 1.1.0 | **Ratified**: 2025-10-30 | **Last Amended**: 2025-10-31

@@ -2,6 +2,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "../FileMonitor.h"
+#include "../FileChangeTracker.h"
 #include "../FileUtils.h"
 #include "../DirShareTypeSupportImpl.h"
 #include <ace/OS_NS_unistd.h>
@@ -29,7 +30,8 @@ BOOST_AUTO_TEST_CASE(test_generate_snapshot_multiple_files)
   DirShare::write_file(file3, reinterpret_cast<const unsigned char*>("content3"), 8);
 
   // Create FileMonitor and get snapshot
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
   std::vector<DirShare::FileMetadata> files = monitor.get_all_files();
 
   // Verify we got all 3 files
@@ -68,7 +70,8 @@ BOOST_AUTO_TEST_CASE(test_snapshot_empty_directory)
   ACE_OS::mkdir(test_dir);
 
   // Create FileMonitor and get snapshot
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
   std::vector<DirShare::FileMetadata> files = monitor.get_all_files();
 
   // Verify empty snapshot
@@ -101,8 +104,9 @@ BOOST_AUTO_TEST_CASE(test_snapshot_comparison_missing_files)
   DirShare::write_file(remote_shared, reinterpret_cast<const unsigned char*>("shared"), 6);
 
   // Get snapshots
-  DirShare::FileMonitor local_monitor(local_dir);
-  DirShare::FileMonitor remote_monitor(remote_dir);
+  DirShare::FileChangeTracker change_tracker;
+  DirShare::FileMonitor local_monitor(local_dir, change_tracker);
+  DirShare::FileMonitor remote_monitor(remote_dir, change_tracker);
 
   std::vector<DirShare::FileMetadata> local_files = local_monitor.get_all_files();
   std::vector<DirShare::FileMetadata> remote_files = remote_monitor.get_all_files();
@@ -153,8 +157,9 @@ BOOST_AUTO_TEST_CASE(test_snapshot_comparison_identical)
   DirShare::write_file(file1_b, reinterpret_cast<const unsigned char*>("same"), 4);
 
   // Get snapshots
-  DirShare::FileMonitor monitor1(dir1);
-  DirShare::FileMonitor monitor2(dir2);
+  DirShare::FileChangeTracker change_tracker;
+  DirShare::FileMonitor monitor1(dir1, change_tracker);
+  DirShare::FileMonitor monitor2(dir2, change_tracker);
 
   std::vector<DirShare::FileMetadata> files1 = monitor1.get_all_files();
   std::vector<DirShare::FileMetadata> files2 = monitor2.get_all_files();
@@ -206,7 +211,8 @@ BOOST_AUTO_TEST_CASE(test_snapshot_metadata_accuracy)
   DirShare::write_file(test_file, test_data, data_size);
 
   // Get snapshot
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
   std::vector<DirShare::FileMetadata> files = monitor.get_all_files();
 
   BOOST_REQUIRE_EQUAL(files.size(), 1);

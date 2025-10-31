@@ -30,7 +30,10 @@ BOOST_AUTO_TEST_CASE(test_detect_single_file_creation)
   const char* test_dir = "test_monitor_single_create_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan (empty directory)
   std::vector<std::string> created, modified, deleted;
@@ -61,7 +64,10 @@ BOOST_AUTO_TEST_CASE(test_detect_multiple_file_creations)
   const char* test_dir = "test_monitor_multi_create_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan (empty directory)
   std::vector<std::string> created, modified, deleted;
@@ -104,7 +110,10 @@ BOOST_AUTO_TEST_CASE(test_scan_state_empty_to_populated)
   const char* test_dir = "test_state_empty_pop_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // First scan - empty state
   std::vector<std::string> created1, modified1, deleted1;
@@ -155,7 +164,10 @@ BOOST_AUTO_TEST_CASE(test_scan_state_no_changes)
   f2 << "static content 2";
   f2.close();
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // First scan - detect existing files
   std::vector<std::string> created1, modified1, deleted1;
@@ -185,7 +197,10 @@ BOOST_AUTO_TEST_CASE(test_scan_state_mixed_operations)
   const char* test_dir = "test_state_mixed_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial empty scan
   std::vector<std::string> created, modified, deleted;
@@ -230,7 +245,10 @@ BOOST_AUTO_TEST_CASE(test_create_detection_various_sizes)
   const char* test_dir = "test_create_sizes_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan
   std::vector<std::string> created, modified, deleted;
@@ -270,7 +288,10 @@ BOOST_AUTO_TEST_CASE(test_create_filename_preservation)
   const char* test_dir = "test_create_filename_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan
   std::vector<std::string> created, modified, deleted;
@@ -297,7 +318,10 @@ BOOST_AUTO_TEST_CASE(test_rapid_successive_creations)
   const char* test_dir = "test_rapid_create_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Initial scan
   std::vector<std::string> created, modified, deleted;
@@ -327,7 +351,10 @@ BOOST_AUTO_TEST_CASE(test_create_after_delete_same_name)
   std::string filename = "recreate.txt";
   std::string full_path = std::string(test_dir) + "/" + filename;
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Create initial file
   std::ofstream file1(full_path.c_str());
@@ -366,7 +393,10 @@ BOOST_AUTO_TEST_CASE(test_state_concurrent_create_modify)
   const char* test_dir = "test_concurrent_ops_boost";
   ACE_OS::mkdir(test_dir);
 
-  DirShare::FileMonitor monitor(test_dir);
+  DirShare::FileChangeTracker change_tracker;
+
+
+  DirShare::FileMonitor monitor(test_dir, change_tracker);
 
   // Create baseline file
   std::string file1 = std::string(test_dir) + "/baseline.txt";
