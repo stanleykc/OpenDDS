@@ -6,13 +6,29 @@ DirShare is an OpenDDS example demonstrating real-time file synchronization betw
 
 ## Features
 
-- **Initial Directory Synchronization**: When participants join, existing files are automatically synchronized
-- **Real-Time File Propagation**: File creation, modification, and deletion events propagate automatically
-- **Conflict Resolution**: Last-write-wins based on timestamps
+### Core Synchronization
+- **Initial Directory Synchronization**: When participants join, existing files are automatically synchronized via DirectorySnapshot topic
+- **Real-Time File Propagation**: File creation, modification, and deletion events propagate automatically within 5 seconds
+- **Conflict Resolution**: Last-write-wins based on timestamps with millisecond precision
+- **Notification Loop Prevention**: FileChangeTracker prevents infinite republishing loops when applying remote changes
+- **Multi-Participant Support**: Supports 10+ simultaneous participants in a sharing session
+
+### File Transfer
 - **Large File Support**: Files up to 1GB with automatic chunking (1MB chunks for files >=10MB)
-- **Integrity Verification**: CRC32 checksums ensure file integrity
+- **Small File Optimization**: Files <10MB transferred via FileContent topic (single message)
+- **Integrity Verification**: CRC32 checksums ensure file integrity after transfer
+- **Metadata Preservation**: File modification timestamps preserved across transfers
+- **Binary File Support**: All file types supported via binary transfer
+
+### Infrastructure
 - **Dual Discovery Support**: Both InfoRepo and RTPS discovery mechanisms
 - **Cross-Platform**: Works on Linux, macOS, and Windows
+- **Polling-Based Monitoring**: FileMonitor polls directory every 1-2 seconds for changes
+
+### Testing
+- **Unit Tests**: Comprehensive Boost.Test coverage for all core components
+- **Integration Tests**: Perl-based test runner for InfoRepo and RTPS modes
+- **Acceptance Tests**: Robot Framework tests mapping to user stories
 
 ## Prerequisites
 
@@ -62,18 +78,77 @@ ls -lh dirshare
 
 ## Running Tests
 
-### InfoRepo Mode (Default)
+DirShare includes three levels of testing:
+
+### Unit Tests (Boost.Test)
+
+Test individual components in isolation:
+
+```bash
+cd DevGuideExamples/DCPS/DirShare/tests
+make  # Build test executables
+
+# Run all unit tests
+perl run_tests.pl
+
+# Run specific test suite
+./ChecksumBoostTest
+./FileUtilsBoostTest
+./FileMonitorBoostTest
+./FileChangeTrackerBoostTest
+```
+
+**Coverage**:
+- **Checksum**: CRC32 calculation, incremental hashing, file-based checksums
+- **FileUtils**: File I/O, timestamp preservation, error handling
+- **FileMonitor**: Change detection, metadata extraction, polling behavior
+- **FileChangeTracker**: Notification loop prevention, thread-safe operations
+
+### Integration Tests (run_test.pl)
+
+Test complete DirShare functionality with DDS:
+
+#### InfoRepo Mode (Default)
 
 ```bash
 cd DevGuideExamples/DCPS/DirShare
 perl run_test.pl
 ```
 
-### RTPS Mode
+#### RTPS Mode
 
 ```bash
 perl run_test.pl --rtps
 ```
+
+### Acceptance Tests (Robot Framework)
+
+Test user stories end-to-end:
+
+```bash
+cd DevGuideExamples/DCPS/DirShare/robot
+
+# Install dependencies (first time only)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Run all acceptance tests
+robot UserStories.robot
+
+# Run specific user story tests
+robot --include us1 UserStories.robot  # Initial synchronization
+robot --include us2 UserStories.robot  # File creation
+robot --include us3 UserStories.robot  # File modification
+
+# Run with RTPS discovery
+robot --variable DISCOVERY_MODE:rtps UserStories.robot
+```
+
+**Test Coverage**:
+- **US1**: Initial Directory Synchronization (3 scenarios)
+- **US2**: Real-Time File Creation Propagation (3 scenarios)
+- **US3**: Real-Time File Modification Propagation (3 scenarios)
 
 ## Usage
 
@@ -191,6 +266,38 @@ dd if=/dev/urandom of=/tmp/dirshare_a/large.bin bs=1M count=50
 watch ls -lh /tmp/dirshare_b/large.bin
 ```
 
+## Project Structure
+
+```
+DevGuideExamples/DCPS/DirShare/
+├── DirShare.idl              # IDL data type definitions
+├── DirShare.mpc              # MPC build configuration
+├── CMakeLists.txt            # CMake build configuration
+├── rtps.ini                  # RTPS discovery configuration
+├── DirShare.cpp              # Main application
+├── FileMonitor.h/cpp         # Directory polling and change detection
+├── FileChangeTracker.h/cpp   # Notification loop prevention
+├── Checksum.h/cpp            # CRC32 integrity verification
+├── FileEventListenerImpl.h/cpp        # FileEvent listener
+├── FileContentListenerImpl.h/cpp      # FileContent listener
+├── FileChunkListenerImpl.h/cpp        # FileChunk listener
+├── SnapshotListenerImpl.h/cpp         # DirectorySnapshot listener
+├── tests/                    # Unit tests (Boost.Test)
+│   ├── ChecksumBoostTest.cpp
+│   ├── FileUtilsBoostTest.cpp
+│   ├── FileMonitorBoostTest.cpp
+│   ├── FileChangeTrackerBoostTest.cpp
+│   ├── tests.mpc             # Test build configuration
+│   └── run_tests.pl          # Test runner
+├── robot/                    # Acceptance tests (Robot Framework)
+│   ├── UserStories.robot     # User story test cases
+│   ├── keywords/             # Robot Framework keywords
+│   ├── libraries/            # Python support libraries
+│   └── requirements.txt      # Python dependencies
+├── README.md                 # This file
+└── run_test.pl               # Integration test runner
+```
+
 ## Architecture
 
 ### Data Types (IDL)
@@ -203,17 +310,81 @@ watch ls -lh /tmp/dirshare_b/large.bin
 
 ### DDS Topics
 
-- `DirShare_FileEvents`: File operation notifications
-- `DirShare_FileContent`: Small file transfers
-- `DirShare_FileChunks`: Large file chunked transfers
-- `DirShare_DirectorySnapshot`: Initial directory snapshots
+- `DirShare_FileEvents`: File operation notifications (QoS: Reliable, TransientLocal)
+- `DirShare_FileContent`: Small file transfers (QoS: Reliable, Volatile)
+- `DirShare_FileChunks`: Large file chunked transfers (QoS: Reliable, Volatile)
+- `DirShare_DirectorySnapshot`: Initial directory snapshots (QoS: Reliable, TransientLocal)
 
 ### Components
 
-- **FileMonitor**: Polls directory for changes (1-2 second interval)
-- **Checksum**: CRC32 integrity verification
-- **FileUtils**: File I/O and timestamp preservation
-- **Listeners**: DDS DataReader listeners for receiving remote changes
+#### Core Components
+- **FileMonitor** (`FileMonitor.h/cpp`): Polls directory for changes (1-2 second interval)
+  - Detects file creation, modification, and deletion
+  - Extracts file metadata (size, timestamp)
+  - Works with FileChangeTracker to prevent notification loops
+
+- **FileChangeTracker** (`FileChangeTracker.h/cpp`): Prevents infinite notification loops
+  - Tracks files being updated from remote sources
+  - Thread-safe using ACE_Thread_Mutex
+  - Integrated with FileMonitor and listeners
+
+- **Checksum** (`Checksum.h/cpp`): CRC32 integrity verification
+  - File-based and data-based checksum calculation
+  - Incremental hashing support
+  - Used for file integrity validation
+
+- **FileUtils**: File I/O and timestamp preservation (embedded in DirShare.cpp)
+  - Read/write operations with error handling
+  - Modification timestamp preservation
+  - Binary file support
+
+#### DDS Listeners
+- **FileEventListenerImpl** (`FileEventListenerImpl.h/cpp`): Receives file operation notifications
+  - Handles CREATE, MODIFY, DELETE events
+  - Coordinates with FileChangeTracker
+  - Triggers appropriate file transfers
+
+- **FileContentListenerImpl** (`FileContentListenerImpl.h/cpp`): Receives small file transfers
+  - Handles files <10MB
+  - Single-message transfer
+  - Validates checksums
+
+- **FileChunkListenerImpl** (`FileChunkListenerImpl.h/cpp`): Receives chunked file transfers
+  - Handles files >=10MB in 1MB chunks
+  - Reassembles chunks in sequence
+  - Validates final checksum
+
+- **SnapshotListenerImpl** (`SnapshotListenerImpl.h/cpp`): Receives initial directory snapshots
+  - Processes DirectorySnapshot messages
+  - Synchronizes existing files on startup
+  - Coordinates initial state propagation
+
+## Implementation Status
+
+### Completed (Phase 1-2)
+- ✅ IDL data model definition (FileEvent, FileMetadata, FileContent, FileChunk, DirectorySnapshot)
+- ✅ MPC and CMake build configurations
+- ✅ DDS infrastructure (DomainParticipant, Topics, Publishers, Subscribers)
+- ✅ FileMonitor with polling-based directory scanning
+- ✅ CRC32 checksum utilities with comprehensive test coverage
+- ✅ FileChangeTracker for notification loop prevention
+- ✅ Unit test framework (Boost.Test) with 50+ test cases
+- ✅ Integration test scripts (run_test.pl) for InfoRepo and RTPS modes
+- ✅ Robot Framework acceptance tests for US1, US2, US3
+
+### In Progress (Phase 3+)
+- 🚧 User Story implementations (US1-US6)
+- 🚧 DDS Listener implementations (FileEvent, FileContent, FileChunk, Snapshot)
+- 🚧 File transfer logic (small files and chunked transfers)
+- 🚧 Initial directory synchronization
+- 🚧 Real-time change propagation
+
+### Planned
+- 📋 User Story 4: File deletion propagation
+- 📋 User Story 5: Concurrent modification conflict resolution
+- 📋 User Story 6: Complete metadata preservation
+- 📋 Performance optimization and stress testing
+- 📋 Additional Robot Framework test scenarios
 
 ## Limitations
 
@@ -261,12 +432,58 @@ watch ls -lh /tmp/dirshare_b/large.bin
 | Delete/Propagate | Any | < 1 second |
 | Initial Sync | 100 files (1 MB each) | < 30 seconds |
 
+## Development
+
+### Adding New Features
+
+1. **Update IDL** (`DirShare.idl`): Add new data types if needed
+2. **Implement Component**: Create new .h/.cpp files following OpenDDS conventions
+3. **Add Unit Tests**: Create Boost.Test file in `tests/` directory
+4. **Update MPC**: Add new files to `DirShare.mpc` and `tests/tests.mpc`
+5. **Test**: Run unit tests, integration tests, and acceptance tests
+
+### Code Style
+
+- Follow OpenDDS coding conventions
+- Use ACE logging macros (`ACE_ERROR`, `ACE_DEBUG`)
+- Include proper error handling and cleanup
+- Document public interfaces with comments
+- Use `ACE_Thread_Mutex` for thread safety
+
+### Debugging
+
+Enable verbose DDS logging:
+```bash
+export DCPS_debug_level=4
+export DCPS_transport_debug_level=4
+./dirshare -DCPSConfigFile rtps.ini /tmp/dirshare_a
+```
+
+### Running Linter
+
+OpenDDS provides a code linter:
+```bash
+perl $DDS_ROOT/tools/scripts/lint.pl --path DevGuideExamples/DCPS/DirShare
+```
+
+## Design Documents
+
+Detailed design documentation is available in `/specs/001-dirshare/`:
+- **spec.md**: Feature specification with user stories and requirements
+- **plan.md**: Implementation plan and architecture decisions
+- **data-model.md**: IDL data structures and relationships
+- **contracts/topics.md**: DDS topic definitions and QoS policies
+- **research.md**: Technology research and design decisions
+- **tasks.md**: Implementation task breakdown
+
 ## Further Reading
 
 - **OpenDDS Developer's Guide**: `$DDS_ROOT/docs/OpenDDS_Developer_Guide.pdf`
 - **Design Documents**: `/specs/001-dirshare/` in repository
 - **OpenDDS Website**: https://opendds.org/
 - **DDS Specification**: https://www.omg.org/spec/DDS/
+- **Boost.Test Documentation**: https://www.boost.org/doc/libs/release/libs/test/
+- **Robot Framework**: https://robotframework.org/
 
 ## License
 
