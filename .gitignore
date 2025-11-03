@@ -69,18 +69,6 @@ cachegrind.out.*
 massif.out
 massif.out.*
 
-# IDL compiler generated files
-*TypeSupport.idl
-*TypeSupportImpl.h
-*TypeSupportImpl.cpp
-*C.h
-*C.cpp
-*C.inl
-*S.h
-*S.cpp
-*S.inl
-*_export.h
-
 # Misc
 *.tlog
 *.log
