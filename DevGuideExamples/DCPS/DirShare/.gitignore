@@ -1,15 +1,18 @@
 # IDL compiler generated files
-# IDL compiler generated files
-*TypeSupport.idl
-*TypeSupportImpl.h
-*TypeSupportImpl.cpp
-*C.h
-*C.cpp
-*C.inl
-*S.h
-*S.cpp
-*S.inl
-*_export.h
+DirShareTypeSupport.idl
+DirShareTypeSupportImpl.h
+DirShareTypeSupportImpl.cpp
+DirShareC.h
+DirShareC.cpp
+DirShareC.inl
+DirShareS.h
+DirShareS.cpp
+DirShareTypeSupportC.h
+DirShareTypeSupportC.cpp
+DirShareTypeSupportC.inl
+DirShareTypeSupportS.h
+DirShareTypeSupportS.cpp
+DirShare_export.h
 
 # Main application executable
 /dirshare
