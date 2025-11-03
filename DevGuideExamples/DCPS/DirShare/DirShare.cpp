@@ -551,6 +551,10 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                        ret));
             break;
           }
+
+          // Small delay to avoid overwhelming UDP send buffer
+          ACE_Time_Value delay(0, 10000); // 10ms
+          ACE_OS::sleep(delay);
         }
 
         ACE_DEBUG((LM_INFO,
@@ -699,6 +703,10 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                            ret));
                 break;
               }
+
+              // Small delay to avoid overwhelming UDP send buffer
+              ACE_Time_Value delay(0, 10000); // 10ms
+              ACE_OS::sleep(delay);
             }
 
             ACE_DEBUG((LM_INFO,
@@ -832,6 +840,10 @@ int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
                            ret));
                 break;
               }
+
+              // Small delay to avoid overwhelming UDP send buffer
+              ACE_Time_Value delay(0, 10000); // 10ms
+              ACE_OS::sleep(delay);
             }
 
             ACE_DEBUG((LM_INFO,
