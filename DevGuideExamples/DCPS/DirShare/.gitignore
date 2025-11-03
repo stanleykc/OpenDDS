@@ -46,6 +46,7 @@ DirShare_export.h
 .obj/
 .shobj/
 .depend.*
+.depend*.bak
 GNUmakefile*
 
 # Temporary and log files

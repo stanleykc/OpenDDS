@@ -120,7 +120,7 @@ Examples MUST maintain clean version control by excluding generated files, build
 - `.gitignore` MUST ignore all IDL compiler-generated files:
   - `*TypeSupportImpl.cpp`, `*TypeSupportImpl.h`
   - `*TypeSupport.idl`
-  - `*C.{h,cpp,inl}`, `*S.{h,cpp,inl}`
+  - MUST explicitly ignore file names for generated files that match this pattern.`*C.{h,cpp,inl}`, `*S.{h,cpp,inl}`
   - `*TypeSupportC.{h,cpp,inl}`, `*TypeSupportS.{h,cpp,inl}`
 - `.gitignore` MUST ignore all executable and library outputs:
   - Application executables (by name, e.g., `/publisher`, `/subscriber`, `/dirshare`)
